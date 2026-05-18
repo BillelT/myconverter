@@ -1,0 +1,139 @@
+/* =========================================================
+   tokens.css — Variables de design system
+   ---------------------------------------------------------
+   Toutes les valeurs réutilisables du brand passent par ici.
+   Aucun composant ne doit hardcoder une couleur, un espacement
+   ou une font-size — tout doit référencer une variable.
+
+   Convention : on nomme par CE QUE C'EST (rôle / hiérarchie),
+   pas par CE QUE ÇA FAIT (contexte d'usage).
+
+   Règle d'ajout : un token n'est ajouté que s'il est utilisé
+   par au moins un composant ou une vue. Pas de scaffolding
+   spéculatif.
+   ========================================================= */
+
+:root {
+  /* ---------- Colors ---------- */
+  --color-bg:            #ffffff;
+  --color-surface:       #f7f7f8;
+  --color-text:          #0a0a0a;
+  --color-text-secondary: #52525b;
+  --color-text-muted:    #737373;
+  --color-border:        #e5e5e5;
+
+  /* Brand — jaune CIB. La couleur principale de l'identité. */
+  --color-brand-yellow-main:       #f9ed32;
+  --color-brand-yellow-main-20:    #f9ed3233;
+  --color-brand-yellow-secondary:  #fcff69;
+  --color-brand-yellow-tertiary:   #feffb3;
+  --color-brand-yellow-pressed:    #ffe77a;
+  --color-brand-yellow-edge:       rgba(235, 166, 19, 0.45);
+  --color-brand-yellow-shadow:     rgba(235, 166, 19, 0.23);
+
+  /* ---------- Spacing (échelle 4pt) ---------- */
+  --space-0:   0;
+  --space-1:   0.25rem;  /*  4px */
+  --space-2:   0.5rem;   /*  8px */
+  --space-3:   0.75rem;  /* 12px */
+  --space-4:   1rem;     /* 16px */
+  --space-5:   1.5rem;   /* 24px */
+  --space-6:   2rem;     /* 32px */
+  --space-7:   3rem;     /* 48px */
+  --space-8:   4rem;     /* 64px */
+  --space-9:   6rem;     /* 96px */
+
+  /* ---------- Typography ---------- */
+  /* SF Pro est la famille canonique du brand. Stack web avec
+     fallback système Apple → fallbacks cross-platform. */
+  --font-sans:  -apple-system, BlinkMacSystemFont, "SF Pro Display",
+                "SF Pro Text", "Inter", system-ui, "Segoe UI", sans-serif;
+  --font-mono:  ui-monospace, SFMono-Regular, "JetBrains Mono", monospace;
+
+  --text-xs:    0.75rem;   /* 12px */
+  --text-sm:    0.875rem;  /* 14px */
+  --text-base:  1rem;      /* 16px */
+  --text-md:    1.125rem;  /* 18px */
+  --text-lg:    1.25rem;   /* 20px */
+  --text-xl:    1.5rem;    /* 24px */
+  --text-2xl:   2rem;      /* 32px */
+  --text-3xl:   2.5rem;    /* 40px */
+  --text-4xl:   3.5rem;    /* 56px */
+  --text-5xl:   4.5rem;    /* 72px */
+
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  --leading-tight:  1.15;
+  --leading-snug:   1.35;
+  --leading-normal: 1.5;
+  --leading-loose:  1.7;
+
+  --tracking-tight:  -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;
+
+  /* ---------- Radius ---------- */
+  --radius-none: 0;
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   8px;    /* inputs, boutons */
+  --radius-lg:   14px;   /* cartes (signature CIB) */
+  --radius-xl:   20px;
+  --radius-2xl:  32px;
+  --radius-full: 9999px;
+
+  /* ---------- Shadows ---------- */
+  /* CTA brand — état repos */
+  --shadow-cta:
+    0 1px 1px 0 rgba(0, 0, 0, 0.04),
+    0 0 2px 0 rgba(0, 0, 0, 0.10);
+  --shadow-cta-inset:
+    inset 0 0 0 0.5px var(--color-brand-yellow-edge),
+    inset 0 -1.5px 0 0 var(--color-brand-yellow-shadow);
+
+  /* CTA brand — état hover (plus de relief) */
+  --shadow-cta-hover:
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    0 1px 1px rgba(0, 0, 0, 0.30);
+  --shadow-cta-hover-inset:
+    inset 0 0 0 0.5px rgba(235, 166, 19, 0.48),
+    inset 0 -1px 0 0 var(--color-brand-yellow-shadow);
+
+  /* CTA brand — état pressed (depressed, ring orange + inset top) */
+  --shadow-cta-pressed:
+    0 0 0 0.5px rgba(235, 166, 19, 0.48);
+  --shadow-cta-pressed-inset:
+    inset 0 1px 0 0 var(--color-brand-yellow-shadow);
+
+  /* Élément légèrement surélevé (tab actif, etc. — comme boids) */
+  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.04);
+
+  /* Bouton outil (ring 1px + ombre douce — boids global button) */
+  --shadow-button:
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+  --shadow-button-hover:
+    0 2px 6px rgba(0, 0, 0, 0.07),
+    0 0 0 1px rgba(0, 0, 0, 0.09);
+
+  /* ---------- Layout ---------- */
+  --container-xl:   1280px;
+  --header-height:  4rem;   /* 64px — hauteur des barres de nav */
+
+  --z-sticky: 100;
+
+  /* ---------- Motion ---------- */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast:   120ms;
+  --duration-base:   220ms;
+  --duration-slow:   400ms;
+}
+
+
+::selection {
+  background-color: var(--color-brand-yellow-main-20);
+}
