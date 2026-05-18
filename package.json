@@ -12,10 +12,10 @@
   "dependencies": {
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.1",
-    "fast-xml-parser": "^4.4.1",
+    "fast-xml-parser": "^5.8.0",
     "html2canvas": "^1.4.1",
     "js-yaml": "^4.1.0",
-    "jspdf": "^2.5.2",
+    "jspdf": "^4.2.1",
     "jszip": "^3.10.1",
     "mammoth": "^1.8.0",
     "marked": "^14.1.3",
