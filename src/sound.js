@@ -1,15 +1,10 @@
 // =========================================================
-// sound.js — Sons d'interaction CIB (axe outil)
+// sound.js — Sons d'interaction
 // ---------------------------------------------------------
-// Reproduit à l'identique le système son de boids.design.
-// Lib : @web-kits/audio (raphaelsalaja), lazy-loadée depuis
-// esm.sh à la première interaction (l'AudioContext exige un
-// geste utilisateur, donc playSound() est toujours appelé
-// depuis un handler de clic / change).
-//
-// Recettes (defineSound / defineSequence) copiées telles
-// quelles de boids pour garder la signature sonore identique
-// d'un outil CIB à l'autre.
+// Lib : @web-kits/audio (raphaelsalaja), bundlée via npm (pas
+// d'appel CDN runtime), lazy-loadée à la première interaction
+// (l'AudioContext exige un geste utilisateur, donc playSound()
+// est toujours appelé depuis un handler de clic / change).
 // =========================================================
 
 let audioLib = null;
@@ -113,7 +108,7 @@ async function initAudio() {
   if (initPromise) return initPromise;
   initPromise = (async () => {
     try {
-      audioLib = await import("https://esm.sh/@web-kits/audio@0.1.0");
+      audioLib = await import("@web-kits/audio");
       buildSounds();
       await audioLib.ensureReady();
     } catch (e) {

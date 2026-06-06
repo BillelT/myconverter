@@ -6,8 +6,9 @@ const VIDEO = ["mp4", "webm", "mov", "mkv", "avi"];
 // Le coeur ffmpeg.wasm doit correspondre à l'ABI du wrapper
 // @ffmpeg/ffmpeg (ligne 0.12.x) — un mismatch provoque
 // "RuntimeError: memory access out of bounds".
-const CORE_VERSION = "0.12.10";
-const stBase = `https://unpkg.com/@ffmpeg/core@${CORE_VERSION}/dist/esm`;
+// Le coeur est servi depuis public/ffmpeg-core/ pour rester 100% local
+// (aucun appel à un CDN, l'IP de l'utilisateur ne fuit nulle part).
+const stBase = "/ffmpeg-core";
 
 let ffmpeg = null;
 let loadPromise = null;

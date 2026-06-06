@@ -10,8 +10,10 @@
     "og": "node scripts/make-og.mjs"
   },
   "dependencies": {
+    "@ffmpeg/core": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.1",
+    "@web-kits/audio": "^0.1.0",
     "fast-xml-parser": "^5.8.0",
     "heic2any": "^0.0.4",
     "html2canvas": "^1.4.1",
