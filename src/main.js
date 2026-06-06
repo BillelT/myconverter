@@ -73,8 +73,6 @@ const refs = {
   engineLabel: $("[data-engine-label]"),
   soundToggle: $("[data-sound-toggle]"),
   work: $("[data-work]"),
-  convertTop: $("[data-convert-all-top]"),
-  cancelTop: $("[data-cancel-top]"),
   dropzone: $("[data-dropzone]"),
   fileList: $("[data-file-list]"),
 };
@@ -318,14 +316,10 @@ function syncSide() {
   const can = convertibleCount() > 0;
   const done = doneCount();
 
-  // boutons "Tout convertir" (top + side) selon busy
-  for (const btn of [refs.convertSide, refs.convertTop]) {
-    btn.hidden = state.busy;
-    btn.disabled = !can;
-    btn.setAttribute("aria-disabled", String(!can));
-  }
+  refs.convertSide.hidden = state.busy;
+  refs.convertSide.disabled = !can;
+  refs.convertSide.setAttribute("aria-disabled", String(!can));
   refs.cancelSide.hidden = !state.busy;
-  refs.cancelTop.hidden = !state.busy;
 
   refs.downloadAll.disabled = done === 0;
   refs.downloadAll.textContent =
@@ -459,9 +453,7 @@ refs.videoMaxHeight.addEventListener("change", (e) => {
 });
 
 refs.convertSide.addEventListener("click", convertAll);
-refs.convertTop.addEventListener("click", convertAll);
 refs.cancelSide.addEventListener("click", cancelConversion);
-refs.cancelTop.addEventListener("click", cancelConversion);
 refs.downloadAll.addEventListener("click", downloadAll);
 
 refs.soundToggle.addEventListener("change", (e) =>

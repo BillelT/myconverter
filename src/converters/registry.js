@@ -23,6 +23,7 @@ const CATEGORY_BY_EXT = {
   avif: "image",
   ico: "image",
   tiff: "image",
+  heic: "image",
   pdf: "document",
   docx: "document",
   md: "document",

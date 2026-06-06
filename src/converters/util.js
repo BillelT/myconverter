@@ -15,6 +15,7 @@ const ALIASES = {
   yml: "yaml",
   mkv: "mkv",
   mpeg: "mpg",
+  heif: "heic",
 };
 
 export function canonicalExt(ext) {

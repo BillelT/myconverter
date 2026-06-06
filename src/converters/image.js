@@ -9,6 +9,7 @@ const RASTER_SOURCES = [
   "svg",
   "avif",
   "ico",
+  "heic",
 ];
 const RASTER_TARGETS = ["png", "jpg", "webp", "bmp"];
 
@@ -18,7 +19,20 @@ const MIME = {
   webp: "image/webp",
 };
 
+// HEIC/HEIF n'est pas décodé nativement par <img> (sauf Safari). On
+// transcode vers du JPEG via heic2any (libheif wasm) avant de passer la
+// main au pipeline canvas.
+async function decodeHeic(file) {
+  const heic2any = (await import("heic2any")).default;
+  const out = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.95 });
+  const blob = Array.isArray(out) ? out[0] : out;
+  return new File([blob], `${baseName(file.name)}.jpg`, { type: "image/jpeg" });
+}
+
 async function drawToCanvas(file) {
+  if (/\.(heic|heif)$/i.test(file.name)) {
+    file = await decodeHeic(file);
+  }
   const img = await loadImageElement(file);
   const w = img.naturalWidth || img.width;
   const h = img.naturalHeight || img.height;
