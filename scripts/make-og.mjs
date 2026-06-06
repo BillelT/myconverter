@@ -1,37 +1,86 @@
-// Génère public/og-image.png (1200×630) — nom du projet + baseline
-// + logo CIB en coin. Lancé via `npm run og`.
-import { readFileSync, writeFileSync } from "node:fs";
+// Génère public/og-image.png (1200×630) dans la DA Billel.
+// Lancé via `npm run og`.
+import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
+import wawoff2 from "wawoff2";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-const logoRaw = readFileSync(join(root, "public/assets/logo-cib.svg"), "utf8");
-// Le logo utilise fill="var(--fill-0, black)" — resvg ne résout pas les
-// variables CSS, on force le noir du brand.
-const logoInner = logoRaw
-  .replace(/var\(--fill-0,\s*black\)/g, "#0a0a0a")
-  .replace(/^<svg[^>]*>/, "")
-  .replace(/<\/svg>\s*$/, "");
+// resvg-js ne lit pas les woff2 variables — on décompresse vers TTF
+// dans un dossier temporaire avant de les passer en fontFiles.
+async function woff2ToTtf(woff2Path, outDir, outName) {
+  const woff2 = readFileSync(woff2Path);
+  const ttf = await wawoff2.decompress(woff2);
+  const outPath = join(outDir, outName);
+  writeFileSync(outPath, Buffer.from(ttf));
+  return outPath;
+}
+
+const tmp = mkdtempSync(join(tmpdir(), "billel-og-"));
+const zodiakTtf = await woff2ToTtf(
+  join(root, "public/fonts/Zodiak_Complete/Zodiak-Variable.woff2"),
+  tmp,
+  "Zodiak.ttf",
+);
+const switzerTtf = await woff2ToTtf(
+  join(root, "public/fonts/Switzer_Complete/Switzer-Variable.woff2"),
+  tmp,
+  "Switzer.ttf",
+);
+
+// Palette Billel
+const PAPER = "#f5f5f5";
+const INK = "#1e1b22";
+const SLATE = "#423e46";
+const STONE = "#aaa9b2";
+const ORANGE = "#f06800";
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#f9ed32"/>
-  <text x="90" y="300" font-family="-apple-system, system-ui, Inter, sans-serif"
-        font-size="116" font-weight="700" fill="#0a0a0a"
-        letter-spacing="-2">Converter</text>
-  <text x="92" y="372" font-family="-apple-system, system-ui, Inter, sans-serif"
-        font-size="40" font-weight="500" fill="#0a0a0a">Convert any file, locally.</text>
-  <text x="92" y="430" font-family="-apple-system, system-ui, Inter, sans-serif"
-        font-size="28" font-weight="400" fill="#52525b">Documents · Images · Data · Audio · Video — nothing leaves your browser.</text>
-  <g transform="translate(1010, 470) scale(2.6)">
-    <svg viewBox="0 0 40 46" width="40" height="46">${logoInner}</svg>
+  <rect width="1200" height="630" fill="${PAPER}"/>
+
+  <!-- Accent : disque orange + glyph converter ink, en haut à droite -->
+  <circle cx="1020" cy="170" r="110" fill="${ORANGE}"/>
+  <g transform="translate(1020 170)" fill="none" stroke="${INK}"
+     stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-40 -16 H22 l-14 -14"/>
+    <path d="M40 16 H-22 l14 14"/>
   </g>
+
+  <!-- Eyebrow -->
+  <text x="80" y="170" font-family="Switzer Variable" font-size="22"
+        font-weight="600" fill="${SLATE}"
+        letter-spacing="3">LOCAL FILE CONVERTER</text>
+
+  <!-- Title Zodiak -->
+  <text x="80" y="340" font-family="Zodiak Variable" font-size="180"
+        font-weight="500" fill="${INK}">Converter</text>
+
+  <!-- Lede -->
+  <text x="84" y="420" font-family="Switzer Variable" font-size="36"
+        font-weight="400" fill="${SLATE}">Convert any file, locally.</text>
+  <text x="84" y="468" font-family="Switzer Variable" font-size="24"
+        font-weight="400" fill="${STONE}">Documents · Images · Data · Audio · Video — nothing leaves your browser.</text>
+
+  <!-- Footer brand -->
+  <line x1="80" y1="540" x2="1120" y2="540" stroke="${STONE}" stroke-width="1"/>
+  <text x="80" y="580" font-family="Zodiak Variable" font-size="28"
+        font-weight="500" fill="${INK}">Billel</text>
 </svg>`;
 
 const png = new Resvg(svg, {
+  font: {
+    fontFiles: [zodiakTtf, switzerTtf],
+    loadSystemFonts: false,
+    defaultFontFamily: "Switzer Variable",
+  },
   fitTo: { mode: "width", value: 1200 },
-}).render().asPng();
+  logLevel: "warn",
+})
+  .render()
+  .asPng();
 
 writeFileSync(join(root, "public/og-image.png"), png);
 console.log("public/og-image.png written (1200x630)");

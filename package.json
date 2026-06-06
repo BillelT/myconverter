@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "wawoff2": "^2.0.1"
   }
 }
