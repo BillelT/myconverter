@@ -1,853 +1,312 @@
-/* =========================================================
-   components.css — Classes utilitaires & composants
-   ---------------------------------------------------------
-   Toutes les classes doivent référencer les variables de
-   tokens.css. Pas de valeurs en dur ici (sauf bordures 1px).
+/* =============================================================================
+   Billel — Components
+   ---------------------------------------------------------------------------
+   Classes utilitaires des composants. Construites exclusivement à partir des
+   variables exposées par `tokens.css`.
+============================================================================= */
 
-   Convention : on nomme par CE QUE C'EST (rôle / hiérarchie),
-   pas par CE QUE ÇA FAIT (contexte d'usage).
+/* ---------- Buttons ------------------------------------------------------ */
 
-   Règle d'ajout : une classe n'est ajoutée que si elle est
-   utilisée par au moins une vue ou observée comme pattern
-   récurrent sur les sites de l'équipe.
-   ========================================================= */
-
-/* ---------- Typography — headings ---------- */
-.h1 {
-  font-family: var(--font-sans);
-  font-size: var(--text-5xl);
-  font-weight: var(--weight-bold);
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-tight);
-}
-
-.h2 {
-  font-family: var(--font-sans);
-  font-size: var(--text-3xl);
-  font-weight: var(--weight-semibold);
-  line-height: var(--leading-tight);
-}
-
-.h3 {
-  font-family: var(--font-sans);
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-semibold);
-  line-height: var(--leading-snug);
-}
-
-.h4 {
-  font-family: var(--font-sans);
-  font-size: var(--text-xl);
-  font-weight: var(--weight-semibold);
-  line-height: var(--leading-snug);
-}
-
-.h5 {
-  font-family: var(--font-sans);
-  font-size: var(--text-lg);
-  font-weight: var(--weight-semibold);
-  line-height: var(--leading-snug);
-}
-
-/* ---------- Typography — inline / supporting ---------- */
-.caption {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-
-/* Petite étiquette en majuscules pour intituler une zone
-   (au-dessus d'un titre, en tête de colonne de footer, etc.) */
-/* boids .section-title : 11px / 600 / uppercase / --muted (#71717a).
-   On snap 11→12 (--text-xs, échelle rem) et --muted → --color-text-muted. */
-.eyebrow {
-  font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-  margin: 0;
-}
-
-/* Lead — paragraphe d'introduction (sous un H1, dans un hero…).
-   Plus grand que .body, muted, ligne plus aérée. */
-.lead {
-  font-family: var(--font-sans);
-  font-size: var(--text-lg);
-  font-weight: var(--weight-regular);
-  line-height: var(--leading-normal);
-  color: var(--color-text-muted);
-  margin: 0;
-}
-
-/* Pill — pastille compacte texte clair sur fond foncé.
-   Sert d'eyebrow visuel dans les hero, de tag, de chip. */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  background-color: var(--color-text);
-  color: var(--color-bg);
-  font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-  line-height: 1;
-}
-
-.link {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-/* ---------- Buttons ---------- */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-5);
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-8);
+  border-radius: var(--radius-sm);
   font-family: var(--font-sans);
-  font-size: var(--text-base);
-  font-weight: var(--weight-medium);
-  line-height: 1;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
   cursor: pointer;
-  transition:
-    background-color var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out),
-    border-color var(--duration-fast) var(--ease-out),
-    filter var(--duration-fast) var(--ease-out);
-  text-decoration: none;
+  background: transparent;
+  border: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .btn:disabled,
+.btn.is-disabled,
 .btn[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
-/* Size modifier — aligne la hauteur sur celle d'un .input */
+.btn--primary {
+  background: var(--color-primary-orange);
+  color: var(--color-black);
+}
+.btn--primary:hover,
+.btn--primary.is-hover {
+  background: var(--color-black);
+  color: var(--color-primary-orange);
+}
+
+.btn--secondary {
+  background: var(--color-primary-purple);
+  color: var(--color-white);
+}
+.btn--secondary:hover,
+.btn--secondary.is-hover {
+  background: var(--color-white);
+  color: var(--color-primary-purple);
+}
+
+.btn--tertiary {
+  background: var(--color-ink);
+  color: var(--color-paper);
+}
+.btn--tertiary:hover,
+.btn--tertiary.is-hover {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.btn--quaternary {
+  background: var(--color-fog);
+  color: var(--color-slate);
+}
+.btn--quaternary:hover,
+.btn--quaternary.is-hover {
+  background: var(--color-slate);
+  color: var(--color-fog);
+}
+
+.btn--outline-purple {
+  background: transparent;
+  border: 1px solid var(--color-primary-purple);
+  color: var(--color-primary-purple);
+}
+.btn--outline-purple:hover {
+  background: var(--color-primary-purple);
+  color: var(--color-paper);
+}
+
+.btn--outline-orange {
+  background: transparent;
+  border: 1px solid var(--color-primary-orange);
+  color: var(--color-primary-orange);
+}
+.btn--outline-orange:hover {
+  background: var(--color-primary-orange);
+  color: var(--color-ink);
+}
+
 .btn--sm {
   padding: var(--space-2) var(--space-3);
-  font-size: var(--text-sm);
+  font-size: 14px;
 }
 
-.btn-secondary {
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  border-color: var(--color-border);
+.btn--block {
+  width: 100%;
 }
-.btn-secondary:hover { background-color: var(--color-surface); }
 
-/* Bouton-lien minuscule — calqué EXACTEMENT sur boids .link-btn.
-   boids : font 11px / weight 500 / padding 2px 8px / radius 4px /
-   color --muted-foreground / fond transparent / PAS de border CSS
-   mais hérite le box-shadow du button global (ring 1px) — c'est
-   ce ring qui fait la "bordure". Actions inline discrètes d'aside
-   (Randomize, etc.). NE PAS utiliser .btn-secondary (trop gros). */
+/* Nav-link */
+.nav-link {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-stone);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.nav-link:hover,
+.nav-link.is-active {
+  color: var(--color-ink);
+}
+
+/* Btn-link — mini bouton inline ring 1px */
 .btn-link {
   display: inline-flex;
   align-items: center;
   padding: 2px var(--space-2);
-  border: none;
-  border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--color-text-secondary);
+  color: var(--color-slate);
+  border-radius: var(--radius-xs);
+  border: none;
   font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  line-height: 1.4;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
-  box-shadow: var(--shadow-button);
-  transition:
-    background-color var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out),
-    box-shadow var(--duration-fast) var(--ease-out);
+  box-shadow: inset 0 0 0 1px var(--color-fog);
+  transition: color 0.15s ease, box-shadow 0.15s ease;
 }
 .btn-link:hover {
-  background: var(--color-surface);
-  color: var(--color-text);
-  box-shadow: var(--shadow-button-hover);
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 1px var(--color-slate);
 }
-
-/* CTA — bouton brand jaune, action principale d'un écran.
-   Inline par défaut (s'adapte à son contenu). Combine avec
-   .cta--block pour le rendre pleine largeur (formulaires). */
-.cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-4);
-  padding: var(--space-2) var(--space-4);
-  border: none;
-  border-radius: var(--radius-md);
-  background: linear-gradient(
-    180deg,
-    var(--color-brand-yellow-secondary) 0%,
-    var(--color-brand-yellow-main) 100%
-  );
-  color: var(--color-text);
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  line-height: 1;
-  cursor: pointer;
-  text-decoration: none;
-  text-shadow: 0 0.5px 0 rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow-cta), var(--shadow-cta-inset);
-  transition:
-    background var(--duration-fast) var(--ease-out),
-    box-shadow var(--duration-fast) var(--ease-out);
-}
-
-.cta:hover {
-  background: linear-gradient(
-    180deg,
-    var(--color-brand-yellow-tertiary) 0%,
-    var(--color-brand-yellow-main) 100%
-  );
-  box-shadow: var(--shadow-cta-hover), var(--shadow-cta-hover-inset);
-}
-
-/* État pressed — gradient inversé warm + ring orange + inset top.
-   La text-shadow remonte (0 -1px) pour donner un effet "enfoncé". */
-.cta:active {
-  filter: none;
-  background: linear-gradient(
-    180deg,
-    var(--color-brand-yellow-pressed) 0%,
-    var(--color-brand-yellow-main) 100%
-  );
-  text-shadow: 0 -1px rgba(255, 255, 255, 0.4);
-  box-shadow: var(--shadow-cta-pressed), var(--shadow-cta-pressed-inset);
-}
-
-.cta:disabled,
-.cta[aria-disabled="true"] {
+.btn-link:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  filter: none;
-}
-.cta:disabled:hover,
-.cta[aria-disabled="true"]:hover {
-  background: linear-gradient(
-    180deg,
-    var(--color-brand-yellow-secondary) 0%,
-    var(--color-brand-yellow-main) 100%
-  );
-  box-shadow: var(--shadow-cta), var(--shadow-cta-inset);
 }
 
-.cta--block {
-  display: flex;
-  width: 100%;
-}
-
-/* Size modifier — CTA plus généreux pour les hero. */
-.cta--lg {
-  padding: var(--space-3) var(--space-6);
-  font-size: var(--text-base);
-}
-
-.cta__icon {
-  width: 16px;
-  height: 18px;
-  display: block;
-}
-
-/* ---------- Cards ---------- */
-.card {
-  background-color: var(--color-bg);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-}
-
-/* Variante sombre (observée sur papier.page — feature cards
-   sur fond foncé). Texte clair, fond --color-text. */
-.card--dark {
-  background-color: var(--color-text);
-  color: var(--color-bg);
-}
-
-/* Slot pour une icône en tête de carte (feature card papier).
-   L'icône hérite la couleur via currentColor — fonctionne aussi
-   bien sur .card que sur .card--dark. */
-.card__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  margin-bottom: var(--space-3);
-  color: var(--color-text);
-}
-.card--dark .card__icon {
-  color: var(--color-bg);
-}
-
-/* ---------- Forms ---------- */
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  width: 100%;
-}
-
-/* Champ horizontal (input + bouton submit accolés) */
-.field--inline {
-  flex-direction: row;
-  align-items: stretch;
-}
-.field--inline > .input {
-  flex: 1;
-  min-width: 0;
-}
+/* ---------- Inputs ------------------------------------------------------- */
 
 .input {
   width: 100%;
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-ink);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
-  background-color: var(--color-bg);
-  color: var(--color-text);
   font-family: var(--font-sans);
-  font-size: var(--text-sm);
+  font-size: 14px;
+  font-weight: 400;
   line-height: 1.4;
-  transition: border-color var(--duration-fast) var(--ease-out);
-}
-
-.input::placeholder { color: var(--color-text-muted); }
-
-.input:focus {
   outline: none;
-  border-color: var(--color-text);
+  transition: border-color 0.15s ease;
 }
-
+.input::placeholder {
+  color: var(--color-stone);
+}
+.input:focus {
+  border-color: var(--color-ink);
+}
 .input:disabled {
-  background-color: var(--color-surface);
-  color: var(--color-text-muted);
+  background: transparent;
+  border-color: var(--color-stone);
+  color: var(--color-stone);
   cursor: not-allowed;
 }
 
-/* ---------- Dividers ---------- */
-/* Séparateur ligne — texte — ligne (le label est le texte enfant) */
-.divider-text {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
+/* Select */
+.select {
   width: 100%;
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-}
-.divider-text::before,
-.divider-text::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background-color: var(--color-border);
-}
-
-/* ---------- Tabs (segmented control) ---------- */
-/* Pattern observé : boids.design (Custom / Shader / Dots).
-   Container surface compact, items transparents, actif sur fond bg. */
-.tabs {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1);
-  background-color: var(--color-surface);
+  padding: var(--space-2) var(--space-8) var(--space-2) var(--space-3);
+  background-color: var(--color-white);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23423e46' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  background-size: 12px;
+  color: var(--color-ink);
+  border: 1px solid var(--color-fog);
   border-radius: var(--radius-md);
-}
-
-/* boids .tab : padding 6px 10px, 12px / 500, --muted, radius 5px.
-   On snap padding sur 8px 12px (--space-2 --space-3, échelle 4pt). */
-.tabs__item {
-  flex: 1;
-  padding: var(--space-2) var(--space-3);
-  border: none;
-  background: transparent;
   font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.4;
   cursor: pointer;
-  border-radius: var(--radius-sm);
-  transition:
-    background-color var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out);
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  transition: border-color 0.15s ease;
+}
+.select:focus {
+  border-color: var(--color-ink);
+}
+.select:disabled {
+  color: var(--color-stone);
+  cursor: not-allowed;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aaa9b2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
 }
 
-.tabs__item:hover { color: var(--color-text); }
+/* ---------- Controls ----------------------------------------------------- */
 
-.tabs__item--active {
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  box-shadow: var(--shadow-raised);
-}
-
-/* ---------- Slider (range input) ---------- */
-/* Pattern observé : boids.design (Speed, Distortion…) +
-   munimaker.app (Size, Weight, Rotation). */
-/* boids input[type=range] : track 3px, thumb 14px noir + ombre,
-   hover scale(1.18). On reproduit à l'identique. */
 .slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 3px;
-  background: var(--color-border);
-  border-radius: 2px;
+  height: 1px;
+  background: var(--color-fog);
   outline: none;
   cursor: pointer;
-  padding: 0;
-  margin: var(--space-2) 0;
 }
-
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: var(--space-4);
+  height: var(--space-4);
   border-radius: var(--radius-full);
-  background: var(--color-text);
-  border: none;
+  background: var(--color-ink);
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  transition: transform var(--duration-fast) var(--ease-out);
 }
-.slider::-webkit-slider-thumb:hover { transform: scale(1.18); }
-.slider::-webkit-slider-thumb:active { transform: scale(1.05); }
-
 .slider::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border-radius: var(--radius-full);
-  background: var(--color-text);
+  width: var(--space-4);
+  height: var(--space-4);
   border: none;
+  border-radius: var(--radius-full);
+  background: var(--color-ink);
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  transition: transform var(--duration-fast) var(--ease-out);
-}
-.slider::-moz-range-thumb:hover { transform: scale(1.18); }
-
-.slider:active::-webkit-slider-thumb { cursor: grabbing; }
-.slider:active::-moz-range-thumb     { cursor: grabbing; }
-
-.slider:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
-/* Ligne label + valeur au-dessus du slider */
-/* Label en gris secondaire, valeur en texte primaire (pattern boids :
-   "Count" gris, "60" noir). */
 .slider-row {
   display: flex;
-  align-items: baseline;
   justify-content: space-between;
-  gap: var(--space-2);
-  font-size: var(--text-xs);
-  color: var(--color-text-secondary);
-}
-
-.slider-row__value {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text);
-}
-
-/* ---------- Select (dropdown) ---------- */
-/* Native select stylé avec un chevron à droite. */
-.select {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  padding-right: var(--space-6);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background-color: var(--color-bg);
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%23737373' stroke-width='1.5'%3E%3Cpath d='M2 2l4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right var(--space-3) center;
-  background-size: 10px;
-  color: var(--color-text);
+  align-items: baseline;
+  margin-bottom: var(--space-2);
   font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  line-height: 1.4;
-  cursor: pointer;
+  font-size: 14px;
+  color: var(--color-slate);
+}
+.slider-row__value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+  color: var(--color-stone);
 }
 
-.select:focus {
-  outline: none;
-  border-color: var(--color-text);
-}
-
-.select:disabled {
-  background-color: var(--color-surface);
-  color: var(--color-text-muted);
-  cursor: not-allowed;
-}
-
-/* ---------- Toggle (switch) ---------- */
-/* Pattern observé : boids "sound" toggle dans le footer aside. */
+/* Toggle */
 .toggle {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   cursor: pointer;
-  font-size: var(--text-sm);
-  color: var(--color-text);
-  user-select: none;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-ink);
 }
-
-.toggle input[type="checkbox"] {
+.toggle__input {
   position: absolute;
-  opacity: 0;
   width: 0;
   height: 0;
+  opacity: 0;
   pointer-events: none;
 }
-
 .toggle__track {
   position: relative;
-  width: 32px;
-  height: 18px;
-  background-color: var(--color-border);
+  width: 40px;
+  height: 20px;
+  background: var(--color-fog);
   border-radius: var(--radius-full);
-  transition: background-color var(--duration-fast) var(--ease-out);
+  transition: background-color 0.15s ease;
   flex-shrink: 0;
 }
-
-.toggle__track::after {
-  content: "";
+.toggle__track::before {
+  content: '';
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 14px;
-  height: 14px;
-  background-color: var(--color-bg);
+  width: 16px;
+  height: 16px;
   border-radius: var(--radius-full);
-  transition: transform var(--duration-fast) var(--ease-out);
+  background: var(--color-white);
+  transition: transform 0.15s ease;
+}
+.toggle__input:checked + .toggle__track {
+  background: var(--color-ink);
+}
+.toggle__input:checked + .toggle__track::before {
+  transform: translateX(20px);
 }
 
-.toggle input:checked ~ .toggle__track {
-  background-color: var(--color-text);
-}
+/* ---------- Markers ------------------------------------------------------ */
 
-.toggle input:checked ~ .toggle__track::after {
-  transform: translateX(14px);
-}
-
-.toggle input:disabled ~ .toggle__track {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ---------- Swatches (color palette picker) ---------- */
-/* boids "Palette" : grid 5 colonnes, chaque pastille =
-   input[type=color] avec border 1px + padding 2px sur fond
-   blanc → la couleur est au centre avec un cadre blanc 2px
-   et une bordure. On reproduit ce cadre via un box-shadow
-   inset blanc de 2px. */
-.swatches {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-2);
-}
-
-.swatches__item {
-  width: 100%;
-  aspect-ratio: 5 / 4;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  padding: 0;
-  box-shadow: inset 0 0 0 2px var(--color-bg);
-  transition:
-    transform var(--duration-fast) var(--ease-out),
-    box-shadow var(--duration-fast) var(--ease-out);
-}
-
-.swatches__item:hover { transform: translateY(-1px); }
-
-.swatches__item--active {
-  box-shadow:
-    inset 0 0 0 2px var(--color-bg),
-    0 0 0 1.5px var(--color-text);
-}
-
-/* ---------- Aside (tool sidebar) ---------- */
-/* Pattern observé : boids.design + munimaker.app.
-   Panneau vertical de contrôles regroupés en sections. */
-.aside {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-  width: 320px;
-  height: 100%;
-  padding: var(--space-5);
-  background-color: var(--color-bg);
-  border-right: 1px solid var(--color-border);
-  overflow-y: auto;
-  flex-shrink: 0;
-}
-
-.aside__head {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.aside__title {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
+.pill {
   display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-2);
-}
-
-/* Sous-titre inline du panneau (ex. "flocking generator") —
-   plus petit que le caption global, comme boids (.brand p 11px). */
-.aside__title .caption {
-  font-size: var(--text-xs);
-}
-
-.aside__section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-/* Header de section avec un eyebrow à gauche et une action à droite */
-.aside__section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-
-.aside__footer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
-  margin-top: auto;
-}
-
-/* ---------- Header & navigation ---------- */
-/* Bandeau supérieur du site. Plein écran, fond blanc, fine
-   border-bottom. Le contenu interne est limité par .nav qui
-   reproduit la max-width de --container-xl. */
-.header {
-  width: 100%;
-  height: var(--header-height);
-  padding: 0 var(--space-5);
-  background-color: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  background: var(--color-paper);
+  color: var(--color-slate);
 }
-
-.header--sticky {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-sticky);
+.pill--light {
+  background: var(--color-white);
+  color: var(--color-ink);
 }
-
-/* Layout interne du header : brand à gauche, suivi
-   immédiatement des liens de nav. Les actions sont
-   poussées à droite via margin-left auto sur .nav__actions.
-   Pattern observé sur smoo.link (gaps : 32 / 24 / 16). */
-.nav {
-  display: flex;
-  align-items: center;
-  gap: var(--space-6);    /* brand → groupe-de-liens : 32px */
-  width: 100%;
-  max-width: var(--container-xl);
-  height: 100%;
-}
-
-.nav__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  text-decoration: none;
-  color: var(--color-text);
-  font-weight: var(--weight-semibold);
-}
-
-.nav__brand-mark {
-  display: block;
-  height: 1.5rem;
-  width: auto;
-}
-
-.nav__brand-name {
-  font-size: var(--text-base);
-}
-
-.nav__links {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);    /* lien → lien : 24px */
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.nav__link {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-text-muted);
-  text-decoration: none;
-  transition: color var(--duration-fast) var(--ease-out);
-}
-.nav__link:hover,
-.nav__link--active {
-  color: var(--color-text);
-}
-
-.nav__actions {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-4);    /* Login → CTA : 16px (mesuré sur smoo.link) */
-  margin-left: auto;      /* pousse les actions à droite */
-}
-
-/* ---------- Hero ---------- */
-/* Section d'ouverture d'une page : pill eyebrow + H1 punchy +
-   lead paragraph + CTA principal. Centré, padding vertical
-   généreux. Pattern observé sur smoo.link, papier.page. */
-.hero {
-  width: 100%;
-  padding: var(--space-9) var(--space-5);
-  background-color: var(--color-bg);
-  text-align: center;
-}
-
-.hero__inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-6);
-  width: 100%;
-  max-width: var(--container-xl);
-  margin: 0 auto;
-}
-
-/* Bloc CTA + texte de réassurance en dessous (ex. "€24/year") */
-.hero__actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  padding-top: var(--space-2);
-}
-
-/* ---------- Signature CIB ---------- */
-/* Lien OBLIGATOIRE vers le site de l'équipe, à inclure sur
-   chaque site CIB (en bas de page, dans aside__footer, sur
-   About, etc.). Affiche assets/signature-cib.svg en 84px de
-   width, aspect ratio préservé. Le lien s'ouvre TOUJOURS dans
-   un nouvel onglet (target="_blank"). Markup type :
-     <a href="https://www.lacompagniedesinternetsbordelaise.fr/"
-        target="_blank" rel="noopener noreferrer">
-       <img src="/assets/signature-cib.svg" alt=""
-            aria-hidden="true" class="signature" />
-     </a>
-*/
-.signature {
-  display: inline-block;
-  width: 84px;
-  height: auto;
-}
-
-/* ---------- Footer ---------- */
-/* Bandeau inférieur du site. Pattern récurrent CIB :
-   brand block (logo + tagline) + colonnes de liens
-   (Product / Resources / Connect) + bottom strip
-   (copyright + cookie notice + legal). */
-.footer {
-  width: 100%;
-  padding: var(--space-7) var(--space-5) var(--space-5);
-  background-color: var(--color-bg);
-  border-top: 1px solid var(--color-border);
-}
-
-.footer__inner {
-  width: 100%;
-  max-width: var(--container-xl);
-  margin: 0 auto;
-}
-
-.footer__top {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  gap: var(--space-7);
-  padding-bottom: var(--space-6);
-}
-
-.footer__brand {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.footer__tagline {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  max-width: 28ch;
-}
-
-.footer__cols {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: var(--space-5);
-}
-
-.footer__col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.footer__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.footer__bottom {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--color-border);
-}
-
-/* ---------- Layout helpers ---------- */
-.stack {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+.pill--dark {
+  background: var(--color-ink);
+  color: var(--color-white);
 }

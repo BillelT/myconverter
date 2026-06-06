@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f9ed32" />
+    <meta name="theme-color" content="#f06800" />
 
     <title>Converter — convert any file, locally</title>
     <meta
@@ -29,9 +29,174 @@
       content="Convert any file, locally. Nothing leaves your browser."
     />
     <meta name="twitter:image" content="/og-image.png" />
+
+    <link rel="stylesheet" href="/src/styles/tokens.css" />
+    <link rel="stylesheet" href="/src/styles/components.css" />
+    <link rel="stylesheet" href="/src/styles/app.css" />
   </head>
   <body>
-    <div id="app"></div>
+    <div class="app-shell">
+      <aside class="aside">
+        <header class="aside__head">
+          <h1 class="aside__title">
+            Converter <span class="caption">local file converter</span>
+          </h1>
+          <p class="caption">
+            Tout est converti dans ton navigateur. Aucun upload, aucun serveur.
+          </p>
+        </header>
+
+        <section class="aside__section">
+          <div class="aside__section-head">
+            <span class="eyebrow">Fichiers</span>
+            <button class="btn-link" data-clear-all hidden>Tout vider</button>
+          </div>
+          <div class="aside__stat">
+            <span class="muted">En file</span>
+            <span class="aside__stat-value" data-stat-queued>0</span>
+          </div>
+          <div class="aside__stat">
+            <span class="muted">Convertis</span>
+            <span class="aside__stat-value" data-stat-done>0</span>
+          </div>
+          <button class="btn btn--tertiary btn--block btn--sm" data-add-files>
+            + Ajouter des fichiers
+          </button>
+          <input type="file" multiple hidden data-file-input />
+        </section>
+
+        <section class="aside__section">
+          <span class="eyebrow">Qualité image</span>
+          <div class="field">
+            <div class="slider-row">
+              <label for="quality">JPG / WEBP</label>
+              <span class="slider-row__value" data-quality-value>0.92</span>
+            </div>
+            <input
+              id="quality"
+              type="range"
+              class="slider"
+              min="0.4"
+              max="1"
+              step="0.02"
+              value="0.92"
+              data-quality
+            />
+          </div>
+        </section>
+
+        <section class="aside__section" data-video-section hidden>
+          <span class="eyebrow">Résolution vidéo (max)</span>
+          <select class="select" data-video-max-height>
+            <option value="source">Source (originale, très lent)</option>
+            <option value="1080">1080p (lent)</option>
+            <option value="720">720p</option>
+            <option value="480" selected>480p (recommandé)</option>
+            <option value="360">360p (très rapide)</option>
+          </select>
+          <p class="caption">
+            Jamais agrandie au-dessus de la source. L'encodage vidéo en local
+            est lent — plus bas = beaucoup plus rapide.
+          </p>
+        </section>
+
+        <section class="aside__section">
+          <button
+            class="btn btn--primary btn--block"
+            data-convert-all-side
+            disabled
+            aria-disabled="true"
+          >
+            Tout convertir
+          </button>
+          <button
+            class="btn btn--quaternary btn--block btn--sm"
+            data-cancel-side
+            hidden
+          >
+            Annuler la conversion
+          </button>
+          <button
+            class="btn btn--tertiary btn--block btn--sm"
+            data-download-all
+            disabled
+          >
+            Télécharger
+          </button>
+          <p class="caption" data-heavy-hint hidden>
+            · Audio/vidéo : moteur ffmpeg (~30 Mo) chargé au 1er lancement.<span
+              data-engine-label
+            ></span>
+          </p>
+        </section>
+
+        <footer class="aside__footer">
+          <label class="toggle">
+            <input
+              type="checkbox"
+              class="toggle__input"
+              checked
+              data-sound-toggle
+            />
+            <span class="toggle__track"></span>
+            son
+          </label>
+          <a class="aside__brand" href="/" aria-label="Billel">Billel</a>
+        </footer>
+      </aside>
+
+      <main class="work" data-work>
+        <div class="work__bar">
+          <div class="work__bar-title">
+            <h2 class="h4">Convertir</h2>
+            <span class="caption"
+              >Glisse tes fichiers, choisis un format, c'est tout.</span
+            >
+          </div>
+          <div class="work__actions">
+            <button
+              class="btn btn--primary"
+              data-convert-all-top
+              disabled
+              aria-disabled="true"
+            >
+              Tout convertir
+            </button>
+            <button
+              class="btn btn--quaternary btn--sm"
+              data-cancel-top
+              hidden
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+
+        <div class="work__body">
+          <div class="dropzone" data-dropzone>
+            <span class="dropzone__glyph" aria-hidden="true">
+              <svg
+                width="28"
+                height="28"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4 8h12l-4-4" />
+                <path d="M20 16H8l4 4" />
+              </svg>
+            </span>
+            <h3 class="h3">Dépose tes fichiers ici</h3>
+          </div>
+
+          <div class="file-list" data-file-list hidden></div>
+        </div>
+      </main>
+    </div>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
