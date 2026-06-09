@@ -20,12 +20,11 @@ const MIME = {
 };
 
 // HEIC/HEIF n'est pas décodé nativement par <img> (sauf Safari). On
-// transcode vers du JPEG via heic2any (libheif wasm) avant de passer la
-// main au pipeline canvas.
+// transcode vers du JPEG via heic-to (libheif wasm récent, inliné) avant
+// de passer la main au pipeline canvas.
 async function decodeHeic(file) {
-  const heic2any = (await import("heic2any")).default;
-  const out = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.95 });
-  const blob = Array.isArray(out) ? out[0] : out;
+  const { heicTo } = await import("heic-to");
+  const blob = await heicTo({ blob: file, type: "image/jpeg", quality: 0.95 });
   return new File([blob], `${baseName(file.name)}.jpg`, { type: "image/jpeg" });
 }
 
