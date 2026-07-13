@@ -173,6 +173,26 @@ function scaleArgs(maxHeight) {
   return ["-vf", `scale=-2:'min(${maxHeight},ih)'`];
 }
 
+// Options d'entrée tolérantes : les enregistrements d'écran Windows
+// (Xbox Game Bar…) sont parfois mal finalisés (mdat volumineux avant
+// le moov, paquets partiellement corrompus). On élargit le probing et
+// on ignore les erreurs de paquets non fatales plutôt que d'abandonner
+// dès le premier octet suspect.
+function inputArgs(inName) {
+  return [
+    "-fflags",
+    "+genpts+igndts+discardcorrupt",
+    "-err_detect",
+    "ignore_err",
+    "-analyzeduration",
+    "100M",
+    "-probesize",
+    "100M",
+    "-i",
+    inName,
+  ];
+}
+
 function argsFor(from, to, inName, outName, opts) {
   const cap =
     opts && opts.videoMaxHeight && opts.videoMaxHeight !== "source"
@@ -181,14 +201,13 @@ function argsFor(from, to, inName, outName, opts) {
   const T = String(threadCount());
 
   if (VIDEO.includes(from) && to === "mp3") {
-    return ["-i", inName, "-vn", "-q:a", "2", outName];
+    return [...inputArgs(inName), "-vn", "-q:a", "2", outName];
   }
   // VP9 par défaut sur .webm = beaucoup trop lourd en wasm.
   // VP8 (libvpx) en "realtime", vitesse max, multithread libvpx.
   if (to === "webm") {
     return [
-      "-i",
-      inName,
+      ...inputArgs(inName),
       ...scaleArgs(opts && opts.videoMaxHeight),
       "-c:v",
       "libvpx",
@@ -210,8 +229,7 @@ function argsFor(from, to, inName, outName, opts) {
   // x264 : preset le plus rapide + faststart, multithread.
   if (to === "mp4") {
     return [
-      "-i",
-      inName,
+      ...inputArgs(inName),
       ...scaleArgs(opts && opts.videoMaxHeight),
       "-c:v",
       "libx264",
@@ -230,8 +248,7 @@ function argsFor(from, to, inName, outName, opts) {
   }
   // Autres conteneurs vidéo : ré-encodage générique borné.
   return [
-    "-i",
-    inName,
+    ...inputArgs(inName),
     ...scaleArgs(opts && opts.videoMaxHeight),
     "-threads",
     T,
@@ -254,13 +271,25 @@ function handleCrash(err, f) {
   }
 }
 
+// Traduit les erreurs FFmpeg les plus courantes en indice actionnable
+// pour l'utilisateur (le fichier lui-même est en cause, pas l'app).
+function friendlyHint(detail) {
+  if (/invalid data found when processing input/i.test(detail)) {
+    return "le fichier semble corrompu ou incomplet (enregistrement interrompu ou pas encore finalisé par Windows) — vérifiez qu'il se lit dans un lecteur vidéo, sinon réexportez-le";
+  }
+  if (/moov atom not found/i.test(detail)) {
+    return "l'index vidéo (moov atom) est manquant, l'enregistrement n'a probablement pas été fermé correctement";
+  }
+  return "";
+}
+
 function noOutputError() {
   const detail = lastFfmpegError();
-  return new Error(
-    detail
-      ? `FFmpeg n'a pas pu produire ce format — ${detail}`
-      : "FFmpeg n'a pas pu produire ce format",
-  );
+  const base = detail
+    ? `FFmpeg n'a pas pu produire ce format — ${detail}`
+    : "FFmpeg n'a pas pu produire ce format";
+  const hint = detail ? friendlyHint(detail) : "";
+  return new Error(hint ? `${base} (${hint})` : base);
 }
 
 async function readOutput(f, outName) {
@@ -319,8 +348,7 @@ async function runGif(file, from, opts, onProgress) {
     const vf = "fps=12,scale=480:-2:flags=lanczos";
     await f.writeFile(inName, await fetchFile(file));
     await f.exec([
-      "-i",
-      inName,
+      ...inputArgs(inName),
       "-t",
       "15",
       "-vf",
@@ -329,8 +357,7 @@ async function runGif(file, from, opts, onProgress) {
       "pal.png",
     ]);
     await f.exec([
-      "-i",
-      inName,
+      ...inputArgs(inName),
       "-i",
       "pal.png",
       "-t",
