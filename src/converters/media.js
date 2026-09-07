@@ -275,7 +275,7 @@ function handleCrash(err, f) {
 // pour l'utilisateur (le fichier lui-même est en cause, pas l'app).
 function friendlyHint(detail) {
   if (/invalid data found when processing input/i.test(detail)) {
-    return "le fichier semble corrompu ou incomplet (enregistrement interrompu ou pas encore finalisé par Windows) — vérifiez qu'il se lit dans un lecteur vidéo, sinon réexportez-le";
+    return "le fichier semble corrompu, tronqué ou incomplet (enregistrement interrompu, export pas finalisé, ou téléchargement/transfert — Slack, mail… — coupé en cours de route) — vérifiez qu'il pèse bien la même taille que l'original et qu'il se lit dans un lecteur vidéo, sinon redemandez-le ou réexportez-le";
   }
   if (/moov atom not found/i.test(detail)) {
     return "l'index vidéo (moov atom) est manquant, l'enregistrement n'a probablement pas été fermé correctement";
