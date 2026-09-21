@@ -114,7 +114,7 @@ function fileIcon(cx, cy, w, h, rotateDeg, ext) {
   <g transform="rotate(${rotateDeg} ${cx} ${cy})">
     <path d="${body}" fill="${PAPER}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>
     <path d="${foldTri}" fill="${BORDER}" stroke="${INK}" stroke-width="1.75" stroke-linejoin="round"/>
-    <rect x="${tagX}" y="${tagY}" width="${tagW}" height="${tagH}" rx="${tagH / 2}" fill="${PAPER}" stroke="${BORDER}" stroke-width="1.5"/>
+    <rect x="${tagX}" y="${tagY}" width="${tagW}" height="${tagH}" rx="${tagH / 2}" fill="${PAPER}"/>
     <text x="${cx}" y="${tagY + tagH * 0.68}" text-anchor="middle" font-family="${SANS}" font-size="${fontSize}" font-weight="700" letter-spacing="0.5" fill="${SLATE}">${ext}</text>
   </g>`;
 }
@@ -125,16 +125,16 @@ function fileIcon(cx, cy, w, h, rotateDeg, ext) {
 // plus gros (128px), dispersés sans grille, léger chevauchement pour la
 // profondeur.
 const cloud = [
-  { ext: "HEIC", w: 128, rot: 6, dx: -0.05, dy: -0.05 },
-  { ext: "PNG", w: 46, rot: -22, dx: 0.88, dy: -0.82 },
-  { ext: "PDF", w: 96, rot: -10, dx: -0.88, dy: -0.55 },
-  { ext: "DOCX", w: 54, rot: 18, dx: -0.48, dy: -0.95 },
-  { ext: "CSV", w: 68, rot: 14, dx: 0.15, dy: -0.88 },
-  { ext: "JSON", w: 38, rot: -16, dx: 0.55, dy: -0.5 },
-  { ext: "MP3", w: 74, rot: -13, dx: -0.75, dy: 0.55 },
-  { ext: "WAV", w: 42, rot: 20, dx: -0.18, dy: 0.9 },
-  { ext: "MP4", w: 110, rot: -6, dx: 0.4, dy: 0.6 },
-  { ext: "MOV", w: 50, rot: 15, dx: 0.9, dy: 0.28 },
+  { ext: "HEIC", w: 128, rot: 6, dx: -0.18, dy: -0.12 },
+  { ext: "PNG", w: 46, rot: -22, dx: 0.95, dy: -0.88 },
+  { ext: "PDF", w: 96, rot: -10, dx: -0.95, dy: -0.62 },
+  { ext: "DOCX", w: 54, rot: 18, dx: -0.58, dy: -0.98 },
+  { ext: "CSV", w: 68, rot: 14, dx: 0.08, dy: -0.95 },
+  { ext: "JSON", w: 38, rot: -16, dx: 0.65, dy: -0.4 },
+  { ext: "MP3", w: 74, rot: -13, dx: -0.92, dy: 0.62 },
+  { ext: "WAV", w: 42, rot: 20, dx: -0.32, dy: 0.98 },
+  { ext: "MP4", w: 110, rot: -6, dx: 0.52, dy: 0.68 },
+  { ext: "MOV", w: 50, rot: 15, dx: 0.98, dy: 0.32 },
 ];
 
 // Marge horizontale symétrique — la même à gauche et à droite de la zone,
