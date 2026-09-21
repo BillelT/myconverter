@@ -30,17 +30,18 @@ const eyebrowLine1 = "Local file converter, no data stored.";
 const eyebrowLine2 = "Nothing leaves your browser.";
 const eyebrowSize = 22;
 const eyebrowLineGap = 32;
-const titleSize = 92;
+const titleSize = 92 * 1.05; // +5%
 const gapEyebrowToTitle = 24;
 const gapTitleToPills = 24;
-const pillsH = 40;
+const pillFontSize = 19; // 15 + 4px
+const pillsH = 44;
 
 const categories = [
-  { label: "Image", width: 92 },
-  { label: "Document", width: 126 },
-  { label: "Data", width: 80 },
-  { label: "Audio", width: 92 },
-  { label: "Video", width: 92 },
+  { label: "Image", width: 100 },
+  { label: "Document", width: 138 },
+  { label: "Data", width: 88 },
+  { label: "Audio", width: 100 },
+  { label: "Video", width: 100 },
 ];
 const pillGap = 12;
 
@@ -55,13 +56,13 @@ const eyebrow1Y = textTop + eyebrowSize * 0.8;
 const eyebrow2Y = eyebrow1Y + eyebrowLineGap;
 const titleY = eyebrow2Y + gapEyebrowToTitle + titleSize * 0.72;
 const pillsTop = titleY + titleSize * 0.22 + gapTitleToPills;
-const pillsTextY = pillsTop + 26;
+const pillsTextY = pillsTop + pillsH / 2 + pillFontSize * 0.35;
 
 let pillX = MARGIN;
 const pillsSvg = categories
   .map((c) => {
-    const rect = `<rect x="${pillX}" y="${pillsTop}" width="${c.width}" height="${pillsH}" rx="20" fill="${ACCENT_20}"/>`;
-    const text = `<text x="${pillX + c.width / 2}" y="${pillsTextY}" text-anchor="middle" font-family="${SANS}" font-size="15" font-weight="600" fill="${INK}">${c.label}</text>`;
+    const rect = `<rect x="${pillX}" y="${pillsTop}" width="${c.width}" height="${pillsH}" rx="${pillsH / 2}" fill="${ACCENT_20}"/>`;
+    const text = `<text x="${pillX + c.width / 2}" y="${pillsTextY}" text-anchor="middle" font-family="${SANS}" font-size="${pillFontSize}" font-weight="600" fill="${INK}">${c.label}</text>`;
     pillX += c.width + pillGap;
     return rect + "\n  " + text;
   })
@@ -118,22 +119,29 @@ function fileIcon(cx, cy, w, h, rotateDeg, ext) {
   </g>`;
 }
 
-// Nuage organique : positions/tailles/rotations choisies à la main (pas de
-// random) pour que le "vrac" reste équilibré — la plus grande carte au
-// centre optique du bloc, les autres dispersées autour sans grille, avec
-// un léger chevauchement pour la profondeur.
+// Nuage organique : 10 fichiers (2 par catégorie réelle — même liste que
+// les pills), positions/tailles/rotations choisies à la main (pas de
+// random) pour que le "vrac" reste équilibré — vraiment petits (38px) à
+// plus gros (128px), dispersés sans grille, léger chevauchement pour la
+// profondeur.
 const cloud = [
-  { ext: "PDF", w: 100, h: 139, rot: -9, dx: -0.86, dy: -0.62 },
-  { ext: "CSV", w: 78, h: 108, rot: 12, dx: 0.62, dy: -0.86 },
-  { ext: "MP3", w: 70, h: 97, rot: -14, dx: -0.48, dy: 0.72 },
-  { ext: "HEIC", w: 118, h: 164, rot: 6, dx: 0.02, dy: -0.02 },
-  { ext: "MP4", w: 92, h: 128, rot: -5, dx: 0.82, dy: 0.5 },
+  { ext: "HEIC", w: 128, rot: 6, dx: -0.05, dy: -0.05 },
+  { ext: "PNG", w: 46, rot: -22, dx: 0.88, dy: -0.82 },
+  { ext: "PDF", w: 96, rot: -10, dx: -0.88, dy: -0.55 },
+  { ext: "DOCX", w: 54, rot: 18, dx: -0.48, dy: -0.95 },
+  { ext: "CSV", w: 68, rot: 14, dx: 0.15, dy: -0.88 },
+  { ext: "JSON", w: 38, rot: -16, dx: 0.55, dy: -0.5 },
+  { ext: "MP3", w: 74, rot: -13, dx: -0.75, dy: 0.55 },
+  { ext: "WAV", w: 42, rot: 20, dx: -0.18, dy: 0.9 },
+  { ext: "MP4", w: 110, rot: -6, dx: 0.4, dy: 0.6 },
+  { ext: "MOV", w: 50, rot: 15, dx: 0.9, dy: 0.28 },
 ];
 
-// dx/dy sont des fractions de la demi-largeur/demi-hauteur de la zone —
-// converties ici en coordonnées réelles, bornées pour rester dans le bloc.
-const zoneHalfW = (graphicRight - graphicLeft) / 2 - 60;
-const zoneHalfH = graphicH / 2 - 20;
+// Marge horizontale symétrique — la même à gauche et à droite de la zone,
+// comme la colonne de texte est marginée pareil des deux côtés du canvas.
+const CLOUD_PAD = 44;
+const zoneHalfW = (graphicRight - graphicLeft) / 2 - CLOUD_PAD;
+const zoneHalfH = graphicH / 2 - 12;
 
 const cloudSvg = cloud
   .map((f) =>
@@ -141,7 +149,7 @@ const cloudSvg = cloud
       graphicCenterX + f.dx * zoneHalfW,
       graphicCenterY + f.dy * zoneHalfH,
       f.w,
-      f.h,
+      f.w / DOC_RATIO,
       f.rot,
       f.ext,
     ),
