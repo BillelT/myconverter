@@ -1,80 +1,78 @@
 // Génère public/og-image.png (1200×630) dans la DA Billel.
 // Lancé via `npm run og`.
-import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
-import wawoff2 from "wawoff2";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-// resvg-js ne lit pas les woff2 variables — on décompresse vers TTF
-// dans un dossier temporaire avant de les passer en fontFiles.
-async function woff2ToTtf(woff2Path, outDir, outName) {
-  const woff2 = readFileSync(woff2Path);
-  const ttf = await wawoff2.decompress(woff2);
-  const outPath = join(outDir, outName);
-  writeFileSync(outPath, Buffer.from(ttf));
-  return outPath;
-}
-
-const tmp = mkdtempSync(join(tmpdir(), "billel-og-"));
-const zodiakTtf = await woff2ToTtf(
-  join(root, "public/fonts/Zodiak_Complete/Zodiak-Variable.woff2"),
-  tmp,
-  "Zodiak.ttf",
-);
-const switzerTtf = await woff2ToTtf(
-  join(root, "public/fonts/Switzer_Complete/Switzer-Variable.woff2"),
-  tmp,
-  "Switzer.ttf",
-);
-
 // Palette Billel (b-token — repo billel-skill)
-const PAPER = "#f1edeb"; // --b-surface-muted
+const PAPER = "#fff9f5"; // --b-surface
+const CARD = "#f1edeb"; // --b-surface-muted
+const BORDER = "#dcd5d0"; // --b-gray-300
 const INK = "#120f0d"; // --b-ink
 const SLATE = "#3b3735"; // --b-text-muted
-const STONE = "#93857d"; // --b-gray-600
-const ORANGE = "#f06800"; // --b-accent
+
+// Aucune police perso embarquée : Cabinet Grotesk n'est pas dispo dans cet
+// environnement (voir public/fonts/CabinetGrotesk/README.md) — --b-font-sans
+// retombe sur la pile système, donc l'OG fait pareil plutôt que de dépendre
+// de Zodiak/Switzer (abandonnées côté site, tokens.css n'y touche plus).
+const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+const MONO = "ui-monospace, SFMono-Regular, Menlo, Monaco, monospace";
+
+// Aperçu sobre de l'UI réelle : une ligne par fichier, extension source →
+// extension cible. Une paire par catégorie supportée (image / document /
+// audio / vidéo), pour montrer la largeur de l'outil sans énumérer un texte.
+const rows = [
+  { name: "photo.heic", to: "JPG" },
+  { name: "report.docx", to: "PDF" },
+  { name: "clip.mov", to: "MP4" },
+];
+
+const cardX = 700;
+const cardY = 163;
+const cardW = 430;
+const cardH = 304;
+const rowGap = 88;
+const rowInnerX = cardX + 32;
+const rowInnerW = cardW - 64;
+const badgeW = 74;
+
+const rowsSvg = rows
+  .map((row, i) => {
+    const top = cardY + 32 + i * rowGap;
+    const nameY = top + 26;
+    const badgeX = rowInnerX + rowInnerW - badgeW;
+    return `
+  <rect x="${rowInnerX}" y="${top}" width="${rowInnerW}" height="52" rx="10" fill="${PAPER}" stroke="${BORDER}" stroke-width="1"/>
+  <text x="${rowInnerX + 20}" y="${nameY}" font-family="${MONO}" font-size="18" fill="${INK}">${row.name}</text>
+  <text x="${badgeX - 16}" y="${nameY}" font-family="${SANS}" font-size="16" fill="${BORDER}">&#8594;</text>
+  <rect x="${badgeX}" y="${top + 11}" width="${badgeW}" height="30" rx="15" fill="none" stroke="#f06800" stroke-width="1.5"/>
+  <text x="${badgeX + badgeW / 2}" y="${nameY}" text-anchor="middle" font-family="${SANS}" font-size="14" font-weight="700" fill="#f06800">${row.to}</text>`;
+  })
+  .join("\n");
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="${PAPER}"/>
 
-  <!-- Accent : disque orange + glyph converter ink, en haut à droite -->
-  <circle cx="1020" cy="170" r="110" fill="${ORANGE}"/>
-  <g transform="translate(1020 170)" fill="none" stroke="${INK}"
-     stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M-40 -16 H22 l-14 -14"/>
-    <path d="M40 16 H-22 l14 14"/>
-  </g>
+  <!-- Title -->
+  <text x="80" y="285" font-family="${SANS}" font-size="96" font-weight="700" letter-spacing="-2" fill="${INK}">Converter</text>
 
-  <!-- Eyebrow -->
-  <text x="80" y="170" font-family="Switzer Variable" font-size="22"
-        font-weight="600" fill="${SLATE}"
-        letter-spacing="3">LOCAL FILE CONVERTER</text>
+  <!-- Subtitle -->
+  <text x="80" y="396" font-family="${SANS}" font-size="25" fill="${SLATE}">Convert any file, locally.</text>
+  <text x="80" y="428" font-family="${SANS}" font-size="25" fill="${SLATE}">Nothing leaves your browser.</text>
 
-  <!-- Title Zodiak -->
-  <text x="80" y="340" font-family="Zodiak Variable" font-size="180"
-        font-weight="500" fill="${INK}">Converter</text>
-
-  <!-- Lede -->
-  <text x="84" y="420" font-family="Switzer Variable" font-size="36"
-        font-weight="400" fill="${SLATE}">Convert any file, locally.</text>
-  <text x="84" y="468" font-family="Switzer Variable" font-size="24"
-        font-weight="400" fill="${STONE}">Documents · Images · Data · Audio · Video — nothing leaves your browser.</text>
-
-  <!-- Footer brand -->
-  <line x1="80" y1="540" x2="1120" y2="540" stroke="${STONE}" stroke-width="1"/>
-  <text x="80" y="580" font-family="Zodiak Variable" font-size="28"
-        font-weight="500" fill="${INK}">Billel</text>
+  <!-- Graphic representation — sober preview of the real file-list UI:
+       filename, arrow, target-format badge. Mirrors the app's own layout. -->
+  <rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="28" fill="${CARD}" stroke="${BORDER}" stroke-width="1.5"/>
+${rowsSvg}
 </svg>`;
 
 const png = new Resvg(svg, {
   font: {
-    fontFiles: [zodiakTtf, switzerTtf],
-    loadSystemFonts: false,
-    defaultFontFamily: "Switzer Variable",
+    loadSystemFonts: true,
+    defaultFontFamily: "Arial",
   },
   fitTo: { mode: "width", value: 1200 },
   logLevel: "warn",
