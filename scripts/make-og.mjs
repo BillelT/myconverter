@@ -67,33 +67,38 @@ const pillsSvg = categories
   })
   .join("\n  ");
 
-/* ---------- Bloc graphique (droite) — un fichier qui se convertit ------- */
-/* Monochrome (encre + gris neutres), pas d'orange dans l'illustration —
-   le orange reste réservé aux pills. Composition en cascade diagonale,
-   pas une rangée alignée : le fichier source (petit) en haut à gauche,
-   le fichier cible (grand, φ fois plus haut) en bas à droite, reliés par
-   deux flèches courbes plutôt qu'un badge statique au centre. La hauteur
-   totale (du haut de la source au bas de la cible) reste égale à celle du
-   bloc de texte, et les deux blocs restent centrés sur le même axe. */
-
-const PHI = 1.618033988749895;
+/* ---------- Bloc graphique (droite) — un nuage de fichiers ---------------- */
+/* Pas une histoire "avant/après" à deux fichiers — un nuage organique de
+   plusieurs fichiers, tailles et formats différents, pour montrer qu'on
+   convertit TOUT (un par catégorie réelle : image, document, data, audio,
+   vidéo — les mêmes que les pills). Monochrome, pas d'orange. La boîte
+   englobante (du plus haut au plus bas fichier) garde la hauteur du bloc
+   de texte et son centre vertical. */
 
 const graphicH = textBlockH;
 const graphicTop = textTop;
-const graphicBottom = graphicTop + graphicH;
+const graphicCenterY = graphicTop + graphicH / 2;
 const graphicLeft = MARGIN + 560 + 60; // après la colonne de texte + gouttière
 const graphicRight = CANVAS_W - MARGIN;
+const graphicCenterX = (graphicLeft + graphicRight) / 2;
 
 const DOC_RATIO = 0.72; // largeur/hauteur d'une page — proportion "papier"
-const targetH = graphicH * 0.82; // < graphicH pour laisser la cascade se déployer
-const targetW = targetH * DOC_RATIO;
-const sourceH = targetH / PHI;
-const sourceW = sourceH * DOC_RATIO;
 
 // Fichier "carte" : coins arrondis + coin plié en duoton (contour + un
 // triangle de pli légèrement teinté, pas un dégradé ni une ombre portée —
 // juste une 2e teinte, à la manière des icônes de fichier Apple/IBM).
-function fileIcon(x, y, w, h, { fold, corner, ext, fill, tagFill, tagStroke, tagText, done } = {}) {
+// w/h sont la taille avant rotation ; le fichier pivote autour de son
+// propre centre pour l'effet "posé en vrac".
+function fileIcon(cx, cy, w, h, rotateDeg, ext) {
+  const x = cx - w / 2;
+  const y = cy - h / 2;
+  const fold = w * 0.22;
+  const corner = w * 0.11;
+  const tagH = h * 0.19;
+  const tagW = Math.min(w - w * 0.16, ext.length * w * 0.075 + w * 0.26);
+  const tagX = x + (w - tagW) / 2;
+  const tagY = y + h - h * 0.14 - tagH;
+  const fontSize = Math.max(11, w * 0.115);
   const body = `M${x + corner} ${y}
     L${x + w - fold} ${y}
     L${x + w} ${y + fold}
@@ -104,83 +109,46 @@ function fileIcon(x, y, w, h, { fold, corner, ext, fill, tagFill, tagStroke, tag
     L${x} ${y + corner}
     A${corner} ${corner} 0 0 1 ${x + corner} ${y} Z`;
   const foldTri = `M${x + w - fold} ${y} L${x + w - fold} ${y + fold} L${x + w} ${y + fold} Z`;
-  const tagW = Math.min(w - 20, ext.length * 9 + 28);
-  const tagX = x + (w - tagW) / 2;
-  const tagY = y + h - 20 - 30;
   return `
-  <path d="${body}" fill="${fill}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="${foldTri}" fill="${BORDER}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>
-  <rect x="${tagX}" y="${tagY}" width="${tagW}" height="30" rx="15" fill="${tagFill}"${tagStroke ? ` stroke="${tagStroke}" stroke-width="1.5"` : ""}/>
-  <text x="${x + w / 2}" y="${tagY + 20}" text-anchor="middle" font-family="${SANS}" font-size="13" font-weight="700" letter-spacing="0.5" fill="${tagText}">${ext}</text>
-  ${done ? `<circle cx="${x + w - 2}" cy="${y + h - 2}" r="15" fill="${PAPER}" stroke="${INK}" stroke-width="2"/><path d="M${x + w - 9} ${y + h - 2} l4 4 l9 -10" fill="none" stroke="${INK}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>` : ""}`;
+  <g transform="rotate(${rotateDeg} ${cx} ${cy})">
+    <path d="${body}" fill="${PAPER}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="${foldTri}" fill="${BORDER}" stroke="${INK}" stroke-width="1.75" stroke-linejoin="round"/>
+    <rect x="${tagX}" y="${tagY}" width="${tagW}" height="${tagH}" rx="${tagH / 2}" fill="${PAPER}" stroke="${BORDER}" stroke-width="1.5"/>
+    <text x="${cx}" y="${tagY + tagH * 0.68}" text-anchor="middle" font-family="${SANS}" font-size="${fontSize}" font-weight="700" letter-spacing="0.5" fill="${SLATE}">${ext}</text>
+  </g>`;
 }
 
-// Icône "roue" (refresh/convert) : la double-flèche horizontale de
-// référence, pliée en cercle — deux arcs de même rayon, à 180° l'un de
-// l'autre, tournant dans le même sens (le cercle est coupé en deux, pas
-// deux flèches indépendantes redisant la même chose). Géométrie réelle
-// (trig sur le cercle), pas une courbe devinée à l'œil : chaque pointe est
-// calculée sur la tangente exacte du cercle à l'angle de fin.
-function arcArrow(cx, cy, r, startDeg, endDeg) {
-  const rad = (d) => (d * Math.PI) / 180;
-  const pt = (deg) => [cx + r * Math.cos(rad(deg)), cy + r * Math.sin(rad(deg))];
-  const [x1, y1] = pt(startDeg);
-  const [x2, y2] = pt(endDeg);
-  const large = Math.abs(endDeg - startDeg) > 180 ? 1 : 0;
-  // Tangente au cercle à endDeg, dans le sens de parcours (angle croissant).
-  const tRad = rad(endDeg);
-  const tx = -Math.sin(tRad);
-  const ty = Math.cos(tRad);
-  const px = -ty;
-  const py = tx;
-  const headLen = 13;
-  const headW = 7.5;
-  const tipX = x2 + tx * headLen * 0.5;
-  const tipY = y2 + ty * headLen * 0.5;
-  const baseX = x2 - tx * headLen * 0.5;
-  const baseY = y2 - ty * headLen * 0.5;
-  return `
-  <path d="M${x1} ${y1} A${r} ${r} 0 ${large} 1 ${x2} ${y2}" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
-  <path d="M${tipX} ${tipY} L${baseX + px * headW} ${baseY + py * headW} L${baseX - px * headW} ${baseY - py * headW} Z" fill="${INK}"/>`;
-}
+// Nuage organique : positions/tailles/rotations choisies à la main (pas de
+// random) pour que le "vrac" reste équilibré — la plus grande carte au
+// centre optique du bloc, les autres dispersées autour sans grille, avec
+// un léger chevauchement pour la profondeur.
+const cloud = [
+  { ext: "PDF", w: 100, h: 139, rot: -9, dx: -0.86, dy: -0.62 },
+  { ext: "CSV", w: 78, h: 108, rot: 12, dx: 0.62, dy: -0.86 },
+  { ext: "MP3", w: 70, h: 97, rot: -14, dx: -0.48, dy: 0.72 },
+  { ext: "HEIC", w: 118, h: 164, rot: 6, dx: 0.02, dy: -0.02 },
+  { ext: "MP4", w: 92, h: 128, rot: -5, dx: 0.82, dy: 0.5 },
+];
 
-function wheelIcon(cx, cy, r) {
-  return arcArrow(cx, cy, r, 200, 335) + arcArrow(cx, cy, r, 20, 155);
-}
+// dx/dy sont des fractions de la demi-largeur/demi-hauteur de la zone —
+// converties ici en coordonnées réelles, bornées pour rester dans le bloc.
+const zoneHalfW = (graphicRight - graphicLeft) / 2 - 60;
+const zoneHalfH = graphicH / 2 - 20;
 
-// Cascade : source en haut à gauche du bloc, cible en bas à droite —
-// leurs extrêmes (haut de la source, bas de la cible) bornent exactement
-// la hauteur du bloc de texte. La roue prend la place laissée entre les
-// deux, au centre du vide qu'elles dessinent.
-const sourceX = graphicLeft;
-const sourceY = graphicTop;
-const targetX = graphicRight - targetW;
-const targetY = graphicBottom - targetH;
+const cloudSvg = cloud
+  .map((f) =>
+    fileIcon(
+      graphicCenterX + f.dx * zoneHalfW,
+      graphicCenterY + f.dy * zoneHalfH,
+      f.w,
+      f.h,
+      f.rot,
+      f.ext,
+    ),
+  )
+  .join("\n");
 
-const wheelCx = (sourceX + sourceW + targetX) / 2;
-const wheelCy = (sourceY + sourceH / 2 + targetY + targetH / 2) / 2;
-const wheel = wheelIcon(wheelCx, wheelCy, 34);
-
-const graphicSvg = `
-${fileIcon(sourceX, sourceY, sourceW, sourceH, {
-  fold: 18,
-  corner: 10,
-  ext: "HEIC",
-  fill: PAPER,
-  tagFill: PAPER,
-  tagStroke: BORDER,
-  tagText: SLATE,
-})}
-${wheel}
-${fileIcon(targetX, targetY, targetW, targetH, {
-  fold: 26,
-  corner: 14,
-  ext: "JPG",
-  fill: PAPER,
-  tagFill: INK,
-  tagText: PAPER,
-  done: true,
-})}`;
+const graphicSvg = cloudSvg;
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_W}" height="${CANVAS_H}" viewBox="0 0 ${CANVAS_W} ${CANVAS_H}">
   <rect width="${CANVAS_W}" height="${CANVAS_H}" fill="${PAPER}"/>
@@ -195,7 +163,7 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_W}" height=
   <!-- Supported categories -->
   ${pillsSvg}
 
-  <!-- Graphic — a file converted into another format -->
+  <!-- Graphic — an organic cloud of files in different formats -->
   ${graphicSvg}
 </svg>`;
 
