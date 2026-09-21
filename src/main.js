@@ -155,14 +155,14 @@ function buildRow(it) {
 
   // meta : pill + convert (select target)
   const meta = el("div", { class: "file-row__meta" }, [
-    el("span", { class: "pill" }, CATEGORY_LABELS[it.category]),
+    el("span", { class: "pill pill--light" }, CATEGORY_LABELS[it.category]),
   ]);
 
   if (it.targets.length) {
     const select = el(
       "select",
       {
-        class: "select format-select",
+        class: "format-select",
         disabled: it.status === "running",
         onchange: (e) => changeTarget(it.id, e.target.value),
       },
@@ -203,7 +203,7 @@ function buildRow(it) {
   const dlBtn = el(
     "button",
     {
-      class: "btn btn--tertiary btn--sm",
+      class: "btn btn-tiertary",
       hidden: true,
       onclick: () => downloadOne(it.id),
     },
@@ -212,7 +212,7 @@ function buildRow(it) {
   const removeBtn = el(
     "button",
     {
-      class: "btn-link",
+      class: "btn btn-ghost",
       onclick: () => removeItem(it.id),
     },
     "Retirer",

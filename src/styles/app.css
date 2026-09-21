@@ -1,7 +1,10 @@
 /* =============================================================================
    app.css — styles spécifiques au Converter
    ---------------------------------------------------------------------------
-   Tout référence tokens.css (Billel). Aucune valeur en dur hors bordures 1px.
+   Tout référence tokens.css (b-token). La coquille (.stage / .editor* /
+   .viewport / .canvas) suit le layout `b-editor` de la skill Billel
+   (archétype outil) ; le reste (dropzone, file-list…) est propre à l'app,
+   construit uniquement à partir des tokens.
 ============================================================================= */
 
 *,
@@ -22,9 +25,9 @@
 html,
 body {
   height: 100%;
-  background-color: var(--color-paper);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
+  background-color: var(--b-surface-muted);
+  color: var(--b-ink);
+  font-family: var(--b-font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -40,167 +43,179 @@ a {
 /* ---------- Helpers texte ---------- */
 
 .caption {
-  font-family: var(--font-sans);
   font-size: 12px;
-  color: var(--color-stone);
-  line-height: 1.4;
+  color: var(--b-text-muted);
+  line-height: var(--b-leading-normal);
 }
 
 .muted {
-  color: var(--color-slate);
-  font-size: 14px;
+  color: var(--b-text-muted);
+  font-size: var(--b-text-sm);
 }
 
 .eyebrow {
   display: block;
-  font-family: var(--font-sans);
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-weight: var(--b-font-semibold);
+  letter-spacing: var(--b-tracking-wide);
   text-transform: uppercase;
-  color: var(--color-slate);
-  margin-bottom: var(--space-3);
+  color: var(--b-text-muted);
 }
 
 .h3 {
-  font-family: var(--font-serif);
-  font-size: 32px;
-  font-weight: 500;
-  line-height: 1.1;
-  color: var(--color-ink);
+  font-size: var(--b-text-xl);
+  font-weight: var(--b-font-medium);
+  line-height: var(--b-leading-tight);
+  color: var(--b-ink);
 }
 
-.h4 {
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.2;
-  color: var(--color-ink);
-}
+/* ---------- Stage : éditeur à gauche, canvas à droite (b-editor) ---------- */
 
-/* ---------- App shell ---------- */
-
-.app-shell {
+.stage {
   display: flex;
   height: 100dvh;
   overflow: hidden;
 }
 
-/* ---------- Aside (gauche) ---------- */
+/* ---------- Editor (aside gauche, b-editor layout 1) ---------- */
 
-.aside {
+.editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 20rem;
   width: 320px;
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-6) var(--space-5);
-  background: var(--color-white);
-  border-right: 1px solid var(--color-fog);
-  overflow-y: auto;
-  gap: var(--space-6);
+  background: var(--b-surface);
+  border-right: 1px solid var(--b-border);
 }
 
-.aside__head {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-fog);
+/* Éditeur = panneau étroit : cta / secondaire / tiertiaire passent en 14px (seule dérogation b-editor) */
+.editor .btn.cta,
+.editor .btn.btn-secondary,
+.editor .btn.btn-tiertary {
+  font-size: var(--b-text-sm);
 }
 
-.aside__title {
-  font-family: var(--font-serif);
-  font-size: 28px;
-  font-weight: 500;
-  line-height: 1.1;
-  color: var(--color-ink);
+.editor__head {
+  flex: 0 0 auto;
+  padding: var(--b-space-24) var(--b-space-20);
+  border-bottom: 1px solid var(--b-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--b-space-8);
+}
+
+.editor__title {
+  margin: 0;
   display: flex;
   align-items: baseline;
-  gap: var(--space-2);
+  gap: var(--b-space-8);
   flex-wrap: wrap;
+  font-size: 28px;
+  font-weight: var(--b-font-medium);
+  line-height: var(--b-leading-tight);
+  color: var(--b-ink);
 }
 
-.aside__section {
+.editor__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--b-space-24) var(--b-space-20);
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--b-space-24);
 }
 
-.aside__section-head {
+.editor__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--b-space-12);
+}
+
+.editor__section-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--b-space-12);
 }
 
-.aside__stat {
+.editor__label {
+  margin: 0;
+  font-size: var(--b-text-xs);
+  font-weight: var(--b-font-semibold);
+  letter-spacing: var(--b-tracking-wide);
+  text-transform: uppercase;
+  color: var(--b-text-faint);
+}
+
+.editor__stat {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-family: var(--font-sans);
-  font-size: 14px;
-  color: var(--color-slate);
+  font-size: var(--b-text-sm);
+  color: var(--b-text-muted);
 }
 
-.aside__stat-value {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
-  font-size: 14px;
-  color: var(--color-ink);
+.editor__stat-value {
+  font-family: var(--b-font-mono);
+  font-size: var(--b-text-sm);
+  color: var(--b-ink);
 }
 
-.aside__footer {
-  margin-top: auto;
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--color-fog);
+.editor__actions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
+  flex-direction: column;
+  gap: var(--b-space-12);
+  margin-top: var(--b-space-4);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--b-space-8);
 }
 
-/* ---------- Work (droite) ---------- */
+.editor__foot {
+  flex: 0 0 auto;
+  padding: var(--b-space-12) var(--b-space-20);
+  border-top: 1px solid var(--b-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--b-space-12);
+}
 
-.work {
+.editor__credit {
+  margin: 0;
+  width: 0;
+  min-width: 100%;
+  font-size: var(--b-text-xs);
+  line-height: var(--b-leading-relaxed);
+  color: var(--b-text-muted);
+}
+
+.editor__toggles {
+  display: flex;
+  gap: var(--b-space-20);
+}
+
+/* ---------- Canvas / zone de travail (droite) ---------- */
+
+.viewport {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  background-color: var(--color-paper);
   overflow: hidden;
 }
 
-.work__bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-5) var(--space-8);
-  background: var(--color-white);
-  border-bottom: 1px solid var(--color-fog);
-}
-
-.work__bar-title {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.work__actions {
-  display: flex;
-  gap: var(--space-3);
-  flex-shrink: 0;
-}
-
-.work__body {
+.canvas {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: var(--space-8);
+  background: var(--b-surface-muted); /* aplat uni, jamais de motif (b-editor) */
+  padding: var(--b-space-32);
   display: flex;
   flex-direction: column;
 }
@@ -213,31 +228,20 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-5);
-  padding: var(--space-12) var(--space-8);
-  background: var(--color-white);
-  border: 1px dashed var(--color-fog);
-  border-radius: var(--radius-lg);
+  gap: var(--b-space-20);
+  padding: var(--b-space-48) var(--b-space-32);
+  background: var(--b-surface);
+  border: 1px dashed var(--b-border);
+  border-radius: var(--b-radius-lg);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  transition: border-color var(--b-duration) var(--b-ease), background-color var(--b-duration) var(--b-ease);
   text-align: center;
 }
 
 .dropzone:hover,
 .dropzone--over {
-  border-color: var(--color-primary-orange);
-  background: var(--color-paper);
-}
-
-.dropzone__glyph {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-full);
-  background: var(--color-primary-orange);
-  color: var(--color-black);
+  border-color: var(--b-accent);
+  background: var(--b-surface-muted);
 }
 
 /* ---------- File list ---------- */
@@ -245,17 +249,17 @@ a {
 .file-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--b-space-12);
 }
 
 .file-row {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  background: var(--color-white);
-  border: 1px solid var(--color-fog);
-  border-radius: var(--radius-lg);
+  gap: var(--b-space-16);
+  padding: var(--b-space-16);
+  background: var(--b-surface);
+  border: 1px solid var(--b-border);
+  border-radius: var(--b-radius-md);
 }
 
 .file-row__thumb {
@@ -265,13 +269,12 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-paper);
-  border-radius: var(--radius-md);
+  background: var(--b-surface-muted);
+  border-radius: var(--b-radius-md);
   overflow: hidden;
-  color: var(--color-slate);
-  font-family: var(--font-sans);
+  color: var(--b-text-muted);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: var(--b-font-semibold);
   letter-spacing: 0.05em;
 }
 
@@ -286,14 +289,13 @@ a {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--b-space-8);
 }
 
 .file-row__name {
-  font-family: var(--font-sans);
   font-size: 15px;
-  font-weight: 500;
-  color: var(--color-ink);
+  font-weight: var(--b-font-medium);
+  color: var(--b-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -302,30 +304,25 @@ a {
 .file-row__meta {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--b-space-12);
   flex-wrap: wrap;
 }
 
 .file-row__convert {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--b-space-8);
 }
 
 .file-row__arrow {
-  color: var(--color-stone);
-  font-size: 14px;
-}
-
-.format-select {
-  width: auto;
-  min-width: 140px;
+  color: var(--b-gray-600);
+  font-size: var(--b-text-sm);
 }
 
 .file-row__actions {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--b-space-8);
   flex-shrink: 0;
 }
 
@@ -334,27 +331,29 @@ a {
 .status {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-sans);
+  gap: var(--b-space-8);
   font-size: 13px;
-  color: var(--color-slate);
+  color: var(--b-text-muted);
 }
 
 .status--done {
-  color: var(--color-primary-orange);
+  color: var(--b-accent);
 }
 
+/* Pas de couleur sémantique "erreur" fournie par le DS (b-token) : on
+   distingue par le poids plutôt que d'inventer une teinte. */
 .status--error {
-  color: var(--color-primary-purple);
+  color: var(--b-ink);
+  font-weight: var(--b-font-semibold);
 }
 
 .spinner {
   display: inline-block;
   width: 12px;
   height: 12px;
-  border: 1.5px solid var(--color-fog);
-  border-top-color: var(--color-ink);
-  border-radius: var(--radius-full);
+  border: 1.5px solid var(--b-border);
+  border-top-color: var(--b-ink);
+  border-radius: var(--b-radius-full);
   animation: spin 0.8s linear infinite;
 }
 
@@ -362,31 +361,21 @@ a {
   to { transform: rotate(360deg); }
 }
 
-/* ---------- Footer brand ---------- */
-
-.aside__brand {
-  font-family: var(--font-serif);
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
 /* ---------- Responsive ---------- */
 
 @media (max-width: 720px) {
-  .app-shell {
+  .stage {
     flex-direction: column;
     height: auto;
     min-height: 100dvh;
   }
-  .aside {
+  .editor {
     width: 100%;
+    min-width: 0;
     border-right: none;
-    border-bottom: 1px solid var(--color-fog);
+    border-bottom: 1px solid var(--b-border);
   }
-  .work__bar,
-  .work__body {
-    padding: var(--space-5);
+  .canvas {
+    padding: var(--b-space-20);
   }
 }

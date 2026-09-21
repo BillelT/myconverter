@@ -31,12 +31,12 @@ const switzerTtf = await woff2ToTtf(
   "Switzer.ttf",
 );
 
-// Palette Billel
-const PAPER = "#f5f5f5";
-const INK = "#1e1b22";
-const SLATE = "#423e46";
-const STONE = "#aaa9b2";
-const ORANGE = "#f06800";
+// Palette Billel (b-token — repo billel-skill)
+const PAPER = "#f1edeb"; // --b-surface-muted
+const INK = "#120f0d"; // --b-ink
+const SLATE = "#3b3735"; // --b-text-muted
+const STONE = "#93857d"; // --b-gray-600
+const ORANGE = "#f06800"; // --b-accent
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="${PAPER}"/>
