@@ -115,39 +115,51 @@ function fileIcon(x, y, w, h, { fold, corner, ext, fill, tagFill, tagStroke, tag
   ${done ? `<circle cx="${x + w - 2}" cy="${y + h - 2}" r="15" fill="${PAPER}" stroke="${INK}" stroke-width="2"/><path d="M${x + w - 9} ${y + h - 2} l4 4 l9 -10" fill="none" stroke="${INK}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>` : ""}`;
 }
 
-// Flèche-lien façon Sankey / flow-diagram : la courbe part et arrive à
-// l'horizontale (tangente nulle aux deux bouts), quels que soient les Y de
-// départ et d'arrivée — c'est ce qui la rend visuellement équilibrée, pas
-// une tangente calculée sur une courbe quelconque. Pointe pleine (triangle
-// plein), comme l'icône de référence — pas un chevron en deux traits.
-function flowArrow(x1, y1, x2, y2) {
-  const headLen = 14;
-  const headW = 8;
-  const tipX = x2;
-  const endX = tipX - headLen; // la courbe s'arrête à la base de la pointe
-  const pull = (endX - x1) * 0.5;
+// Icône "roue" (refresh/convert) : la double-flèche horizontale de
+// référence, pliée en cercle — deux arcs de même rayon, à 180° l'un de
+// l'autre, tournant dans le même sens (le cercle est coupé en deux, pas
+// deux flèches indépendantes redisant la même chose). Géométrie réelle
+// (trig sur le cercle), pas une courbe devinée à l'œil : chaque pointe est
+// calculée sur la tangente exacte du cercle à l'angle de fin.
+function arcArrow(cx, cy, r, startDeg, endDeg) {
+  const rad = (d) => (d * Math.PI) / 180;
+  const pt = (deg) => [cx + r * Math.cos(rad(deg)), cy + r * Math.sin(rad(deg))];
+  const [x1, y1] = pt(startDeg);
+  const [x2, y2] = pt(endDeg);
+  const large = Math.abs(endDeg - startDeg) > 180 ? 1 : 0;
+  // Tangente au cercle à endDeg, dans le sens de parcours (angle croissant).
+  const tRad = rad(endDeg);
+  const tx = -Math.sin(tRad);
+  const ty = Math.cos(tRad);
+  const px = -ty;
+  const py = tx;
+  const headLen = 13;
+  const headW = 7.5;
+  const tipX = x2 + tx * headLen * 0.5;
+  const tipY = y2 + ty * headLen * 0.5;
+  const baseX = x2 - tx * headLen * 0.5;
+  const baseY = y2 - ty * headLen * 0.5;
   return `
-  <path d="M${x1} ${y1} C${x1 + pull} ${y1} ${endX - pull} ${y2} ${endX} ${y2}" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
-  <path d="M${endX} ${y2 - headW} L${tipX} ${y2} L${endX} ${y2 + headW} Z" fill="${INK}"/>`;
+  <path d="M${x1} ${y1} A${r} ${r} 0 ${large} 1 ${x2} ${y2}" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+  <path d="M${tipX} ${tipY} L${baseX + px * headW} ${baseY + py * headW} L${baseX - px * headW} ${baseY - py * headW} Z" fill="${INK}"/>`;
+}
+
+function wheelIcon(cx, cy, r) {
+  return arcArrow(cx, cy, r, 200, 335) + arcArrow(cx, cy, r, 20, 155);
 }
 
 // Cascade : source en haut à gauche du bloc, cible en bas à droite —
 // leurs extrêmes (haut de la source, bas de la cible) bornent exactement
-// la hauteur du bloc de texte.
+// la hauteur du bloc de texte. La roue prend la place laissée entre les
+// deux, au centre du vide qu'elles dessinent.
 const sourceX = graphicLeft;
 const sourceY = graphicTop;
 const targetX = graphicRight - targetW;
 const targetY = graphicBottom - targetH;
 
-// Un seul lien : c'est une conversion à sens unique (HEIC → JPG), pas un
-// échange — deux flèches parallèles pointant dans la même direction ne
-// disent rien de plus qu'une seule, elles encombrent juste le dessin.
-const arrow = flowArrow(
-  sourceX + sourceW + 6,
-  sourceY + sourceH * 0.5,
-  targetX - 6,
-  targetY + targetH * 0.42,
-);
+const wheelCx = (sourceX + sourceW + targetX) / 2;
+const wheelCy = (sourceY + sourceH / 2 + targetY + targetH / 2) / 2;
+const wheel = wheelIcon(wheelCx, wheelCy, 34);
 
 const graphicSvg = `
 ${fileIcon(sourceX, sourceY, sourceW, sourceH, {
@@ -159,7 +171,7 @@ ${fileIcon(sourceX, sourceY, sourceW, sourceH, {
   tagStroke: BORDER,
   tagText: SLATE,
 })}
-${arrow}
+${wheel}
 ${fileIcon(targetX, targetY, targetW, targetH, {
   fold: 26,
   corner: 14,
