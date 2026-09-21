@@ -115,19 +115,20 @@ function fileIcon(x, y, w, h, { fold, corner, ext, fill, tagFill, tagStroke, tag
   ${done ? `<circle cx="${x + w - 2}" cy="${y + h - 2}" r="15" fill="${PAPER}" stroke="${INK}" stroke-width="2"/><path d="M${x + w - 9} ${y + h - 2} l4 4 l9 -10" fill="none" stroke="${INK}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>` : ""}`;
 }
 
-// Flèche courbe avec chevron calculé sur la tangente réelle de la courbe,
-// pas une pointe statique recopiée à l'aveugle — l'angle suit la courbe
-// quel que soit son tracé.
-function curvedArrow(x1, y1, cx, cy, x2, y2) {
-  const angle = Math.atan2(y2 - cy, x2 - cx);
-  const deg = (angle * 180) / Math.PI;
-  const head = 11;
-  const spread = 0.45;
+// Flèche-lien façon Sankey / flow-diagram : la courbe part et arrive à
+// l'horizontale (tangente nulle aux deux bouts), quels que soient les Y de
+// départ et d'arrivée — c'est ce qui la rend visuellement équilibrée, pas
+// une tangente calculée sur une courbe quelconque. Pointe pleine (triangle
+// plein), comme l'icône de référence — pas un chevron en deux traits.
+function flowArrow(x1, y1, x2, y2) {
+  const headLen = 14;
+  const headW = 8;
+  const tipX = x2;
+  const endX = tipX - headLen; // la courbe s'arrête à la base de la pointe
+  const pull = (endX - x1) * 0.5;
   return `
-  <path d="M${x1} ${y1} Q${cx} ${cy} ${x2} ${y2}" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
-  <g transform="translate(${x2} ${y2}) rotate(${deg.toFixed(2)})">
-    <path d="M${-head} ${-head * spread} L0 0 L${-head} ${head * spread}" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>`;
+  <path d="M${x1} ${y1} C${x1 + pull} ${y1} ${endX - pull} ${y2} ${endX} ${y2}" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+  <path d="M${endX} ${y2 - headW} L${tipX} ${y2} L${endX} ${y2 + headW} Z" fill="${INK}"/>`;
 }
 
 // Cascade : source en haut à gauche du bloc, cible en bas à droite —
@@ -138,20 +139,16 @@ const sourceY = graphicTop;
 const targetX = graphicRight - targetW;
 const targetY = graphicBottom - targetH;
 
-const arrow1 = curvedArrow(
-  sourceX + sourceW,
-  sourceY + sourceH * 0.32,
-  sourceX + sourceW + (targetX - sourceX - sourceW) * 0.55,
-  sourceY + sourceH * 0.1,
-  targetX,
+const arrow1 = flowArrow(
+  sourceX + sourceW + 6,
+  sourceY + sourceH * 0.3,
+  targetX - 6,
   targetY + targetH * 0.22,
 );
-const arrow2 = curvedArrow(
-  sourceX + sourceW,
-  sourceY + sourceH * 0.85,
-  sourceX + sourceW + (targetX - sourceX - sourceW) * 0.5,
-  sourceY + sourceH * 1.15,
-  targetX,
+const arrow2 = flowArrow(
+  sourceX + sourceW + 6,
+  sourceY + sourceH * 0.82,
+  targetX - 6,
   targetY + targetH * 0.62,
 );
 
