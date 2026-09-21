@@ -139,17 +139,14 @@ const sourceY = graphicTop;
 const targetX = graphicRight - targetW;
 const targetY = graphicBottom - targetH;
 
-const arrow1 = flowArrow(
+// Un seul lien : c'est une conversion à sens unique (HEIC → JPG), pas un
+// échange — deux flèches parallèles pointant dans la même direction ne
+// disent rien de plus qu'une seule, elles encombrent juste le dessin.
+const arrow = flowArrow(
   sourceX + sourceW + 6,
-  sourceY + sourceH * 0.3,
+  sourceY + sourceH * 0.5,
   targetX - 6,
-  targetY + targetH * 0.22,
-);
-const arrow2 = flowArrow(
-  sourceX + sourceW + 6,
-  sourceY + sourceH * 0.82,
-  targetX - 6,
-  targetY + targetH * 0.62,
+  targetY + targetH * 0.42,
 );
 
 const graphicSvg = `
@@ -162,8 +159,7 @@ ${fileIcon(sourceX, sourceY, sourceW, sourceH, {
   tagStroke: BORDER,
   tagText: SLATE,
 })}
-${arrow1}
-${arrow2}
+${arrow}
 ${fileIcon(targetX, targetY, targetW, targetH, {
   fold: 26,
   corner: 14,
