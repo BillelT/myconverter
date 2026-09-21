@@ -68,27 +68,24 @@ const pillsSvg = categories
   .join("\n  ");
 
 /* ---------- Bloc graphique (droite) — un fichier qui se convertit ------- */
-/* Même hauteur que le bloc de texte, centré sur le même axe vertical.
-   Composition au nombre d'or plutôt qu'un A→B parfaitement symétrique :
-   - le fichier cible (le "après") fait φ fois la hauteur du fichier source
-   - le badge de transformation est posé au point d'or de la largeur
-     (38.2 %), pas au centre — ça donne un poids visuel plus fort au
-     résultat, sur la droite
-   - les deux fichiers partagent la même ligne de base (pas centrés sur
-     le même axe) : un cadrage plus délibéré qu'un alignement milieu. */
+/* Monochrome (encre + gris neutres), pas d'orange dans l'illustration —
+   le orange reste réservé aux pills. Composition en cascade diagonale,
+   pas une rangée alignée : le fichier source (petit) en haut à gauche,
+   le fichier cible (grand, φ fois plus haut) en bas à droite, reliés par
+   deux flèches courbes plutôt qu'un badge statique au centre. La hauteur
+   totale (du haut de la source au bas de la cible) reste égale à celle du
+   bloc de texte, et les deux blocs restent centrés sur le même axe. */
 
 const PHI = 1.618033988749895;
 
 const graphicH = textBlockH;
 const graphicTop = textTop;
-const graphicCenterY = graphicTop + graphicH / 2;
 const graphicBottom = graphicTop + graphicH;
 const graphicLeft = MARGIN + 560 + 60; // après la colonne de texte + gouttière
 const graphicRight = CANVAS_W - MARGIN;
-const graphicW = graphicRight - graphicLeft;
 
 const DOC_RATIO = 0.72; // largeur/hauteur d'une page — proportion "papier"
-const targetH = graphicH;
+const targetH = graphicH * 0.82; // < graphicH pour laisser la cascade se déployer
 const targetW = targetH * DOC_RATIO;
 const sourceH = targetH / PHI;
 const sourceW = sourceH * DOC_RATIO;
@@ -96,7 +93,7 @@ const sourceW = sourceH * DOC_RATIO;
 // Fichier "carte" : coins arrondis + coin plié en duoton (contour + un
 // triangle de pli légèrement teinté, pas un dégradé ni une ombre portée —
 // juste une 2e teinte, à la manière des icônes de fichier Apple/IBM).
-function fileIcon(x, y, w, h, { fold, corner, ext, fill, tag, tagFill, tagStroke, tagText } = {}) {
+function fileIcon(x, y, w, h, { fold, corner, ext, fill, tagFill, tagStroke, tagText, done } = {}) {
   const body = `M${x + corner} ${y}
     L${x + w - fold} ${y}
     L${x + w} ${y + fold}
@@ -115,22 +112,52 @@ function fileIcon(x, y, w, h, { fold, corner, ext, fill, tag, tagFill, tagStroke
   <path d="${foldTri}" fill="${BORDER}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>
   <rect x="${tagX}" y="${tagY}" width="${tagW}" height="30" rx="15" fill="${tagFill}"${tagStroke ? ` stroke="${tagStroke}" stroke-width="1.5"` : ""}/>
   <text x="${x + w / 2}" y="${tagY + 20}" text-anchor="middle" font-family="${SANS}" font-size="13" font-weight="700" letter-spacing="0.5" fill="${tagText}">${ext}</text>
-  ${tag === "done" ? `<circle cx="${x + w - 2}" cy="${y + h - 2}" r="16" fill="${ACCENT}"/><path d="M${x + w - 10} ${y + h - 2} l5 5 l10 -11" fill="none" stroke="${PAPER}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>` : ""}`;
+  ${done ? `<circle cx="${x + w - 2}" cy="${y + h - 2}" r="15" fill="${PAPER}" stroke="${INK}" stroke-width="2"/><path d="M${x + w - 9} ${y + h - 2} l4 4 l9 -10" fill="none" stroke="${INK}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>` : ""}`;
 }
 
-// Ligne de base commune : les deux cartes "posent" sur le même bas,
-// au lieu d'être centrées chacune sur graphicCenterY.
-const baseline = graphicBottom;
+// Flèche courbe avec chevron calculé sur la tangente réelle de la courbe,
+// pas une pointe statique recopiée à l'aveugle — l'angle suit la courbe
+// quel que soit son tracé.
+function curvedArrow(x1, y1, cx, cy, x2, y2) {
+  const angle = Math.atan2(y2 - cy, x2 - cx);
+  const deg = (angle * 180) / Math.PI;
+  const head = 11;
+  const spread = 0.45;
+  return `
+  <path d="M${x1} ${y1} Q${cx} ${cy} ${x2} ${y2}" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>
+  <g transform="translate(${x2} ${y2}) rotate(${deg.toFixed(2)})">
+    <path d="M${-head} ${-head * spread} L0 0 L${-head} ${head * spread}" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>`;
+}
+
+// Cascade : source en haut à gauche du bloc, cible en bas à droite —
+// leurs extrêmes (haut de la source, bas de la cible) bornent exactement
+// la hauteur du bloc de texte.
 const sourceX = graphicLeft;
-const sourceY = baseline - sourceH;
-const goldenX = graphicLeft + graphicW * 0.382; // point d'or de la largeur
-const badgeR = 32;
-const targetX = goldenX + badgeR + 42;
-const targetY = baseline - targetH;
+const sourceY = graphicTop;
+const targetX = graphicRight - targetW;
+const targetY = graphicBottom - targetH;
+
+const arrow1 = curvedArrow(
+  sourceX + sourceW,
+  sourceY + sourceH * 0.32,
+  sourceX + sourceW + (targetX - sourceX - sourceW) * 0.55,
+  sourceY + sourceH * 0.1,
+  targetX,
+  targetY + targetH * 0.22,
+);
+const arrow2 = curvedArrow(
+  sourceX + sourceW,
+  sourceY + sourceH * 0.85,
+  sourceX + sourceW + (targetX - sourceX - sourceW) * 0.5,
+  sourceY + sourceH * 1.15,
+  targetX,
+  targetY + targetH * 0.62,
+);
 
 const graphicSvg = `
 ${fileIcon(sourceX, sourceY, sourceW, sourceH, {
-  fold: 20,
+  fold: 18,
   corner: 10,
   ext: "HEIC",
   fill: PAPER,
@@ -138,20 +165,17 @@ ${fileIcon(sourceX, sourceY, sourceW, sourceH, {
   tagStroke: BORDER,
   tagText: SLATE,
 })}
+${arrow1}
+${arrow2}
 ${fileIcon(targetX, targetY, targetW, targetH, {
   fold: 26,
   corner: 14,
   ext: "JPG",
   fill: PAPER,
-  tag: "done",
-  tagFill: ACCENT,
+  tagFill: INK,
   tagText: PAPER,
-})}
-  <circle cx="${goldenX}" cy="${graphicCenterY}" r="${badgeR}" fill="${ACCENT}"/>
-  <g transform="translate(${goldenX} ${graphicCenterY}) scale(1.3)" fill="none" stroke="${PAPER}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M-16 -8 L10 -8 L2 -16"/>
-    <path d="M16 8 L-10 8 L-2 16"/>
-  </g>`;
+  done: true,
+})}`;
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS_W}" height="${CANVAS_H}" viewBox="0 0 ${CANVAS_W} ${CANVAS_H}">
   <rect width="${CANVAS_W}" height="${CANVAS_H}" fill="${PAPER}"/>
