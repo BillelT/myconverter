@@ -9,63 +9,84 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 // Palette Billel (b-token — repo billel-skill)
 const PAPER = "#fff9f5"; // --b-surface
-const CARD = "#f1edeb"; // --b-surface-muted
+const SURFACE_MUTED = "#f1edeb"; // --b-surface-muted
 const BORDER = "#dcd5d0"; // --b-gray-300
 const INK = "#120f0d"; // --b-ink
 const SLATE = "#3b3735"; // --b-text-muted
+const STONE = "#93857d"; // --b-gray-600
+const ACCENT = "#f06800"; // --b-accent
+const ACCENT_20 = "#f0680033"; // --b-accent-20
 
-// Aucune police perso embarquée : Cabinet Grotesk n'est pas dispo dans cet
-// environnement (voir public/fonts/CabinetGrotesk/README.md) — --b-font-sans
-// retombe sur la pile système, donc l'OG fait pareil plutôt que de dépendre
-// de Zodiak/Switzer (abandonnées côté site, tokens.css n'y touche plus).
+// Cabinet Grotesk n'est pas dispo dans cet environnement (voir
+// public/fonts/CabinetGrotesk/README.md) — --b-font-sans retombe sur la
+// pile système, donc l'OG fait pareil.
 const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 const MONO = "ui-monospace, SFMono-Regular, Menlo, Monaco, monospace";
 
-// Aperçu sobre de l'UI réelle : une ligne par fichier, extension source →
-// extension cible. Une paire par catégorie supportée (image / document /
-// audio / vidéo), pour montrer la largeur de l'outil sans énumérer un texte.
-const rows = [
-  { name: "photo.heic", to: "JPG" },
-  { name: "report.docx", to: "PDF" },
-  { name: "clip.mov", to: "MP4" },
+// Pills — une par catégorie réellement supportée (src/converters/registry.js
+// → CATEGORY_LABELS), pas une liste au pif d'extensions.
+const categories = [
+  { label: "Image", width: 92 },
+  { label: "Document", width: 126 },
+  { label: "Data", width: 80 },
+  { label: "Audio", width: 92 },
+  { label: "Video", width: 92 },
 ];
+const pillGap = 12;
+const pillsTop = 380;
+const pillsH = 40;
+let pillX = 80;
+const pillsSvg = categories
+  .map((c) => {
+    const rect = `<rect x="${pillX}" y="${pillsTop}" width="${c.width}" height="${pillsH}" rx="20" fill="${ACCENT_20}"/>`;
+    const text = `<text x="${pillX + c.width / 2}" y="${pillsTop + 26}" text-anchor="middle" font-family="${SANS}" font-size="15" font-weight="600" fill="${INK}">${c.label}</text>`;
+    pillX += c.width + pillGap;
+    return rect + "\n  " + text;
+  })
+  .join("\n  ");
 
-const cardX = 700;
-const cardY = 163;
-const cardW = 430;
-const cardH = 304;
-const rowGap = 88;
-const rowInnerX = cardX + 32;
-const rowInnerW = cardW - 64;
-const badgeW = 74;
-
-const rowsSvg = rows
-  .map((row, i) => {
-    const top = cardY + 32 + i * rowGap;
-    const nameY = top + 26;
-    const badgeX = rowInnerX + rowInnerW - badgeW;
-    return `
-  <rect x="${rowInnerX}" y="${top}" width="${rowInnerW}" height="52" rx="10" fill="${PAPER}" stroke="${BORDER}" stroke-width="1"/>
-  <text x="${rowInnerX + 20}" y="${nameY}" font-family="${MONO}" font-size="18" fill="${INK}">${row.name}</text>
-  <text x="${badgeX - 16}" y="${nameY}" font-family="${SANS}" font-size="16" fill="${BORDER}">&#8594;</text>
-  <rect x="${badgeX}" y="${top + 11}" width="${badgeW}" height="30" rx="15" fill="none" stroke="#f06800" stroke-width="1.5"/>
-  <text x="${badgeX + badgeW / 2}" y="${nameY}" text-anchor="middle" font-family="${SANS}" font-size="14" font-weight="700" fill="#f06800">${row.to}</text>`;
+// Graphic — deux lignes façon .file-row réelle (thumb + nom + conversion +
+// statut), pas les champs texte de hexadecimal-converter : cet outil n'a
+// pas d'input, c'est un drop de fichiers qui se convertissent.
+const files = [
+  { ext: "HEIC", name: "vacation.heic", to: "HEIC → JPG" },
+  { ext: "MOV", name: "clip.mov", to: "MOV → MP4" },
+];
+const rowW = 420;
+const rowH = 88;
+const rowX = 700;
+const rowGap = 20;
+let rowY = 220;
+const rowsSvg = files
+  .map((f) => {
+    const thumbX = rowX + 16;
+    const thumbY = rowY + 16;
+    const svg = `
+  <rect x="${rowX}" y="${rowY}" width="${rowW}" height="${rowH}" rx="16" fill="${PAPER}" stroke="${BORDER}" stroke-width="1.5"/>
+  <rect x="${thumbX}" y="${thumbY}" width="56" height="56" rx="10" fill="${SURFACE_MUTED}"/>
+  <text x="${thumbX + 28}" y="${thumbY + 33}" text-anchor="middle" font-family="${SANS}" font-size="11" font-weight="700" letter-spacing="0.5" fill="${SLATE}">${f.ext}</text>
+  <text x="${thumbX + 72}" y="${rowY + 36}" font-family="${SANS}" font-size="16" font-weight="500" fill="${INK}">${f.name}</text>
+  <text x="${thumbX + 72}" y="${rowY + 60}" font-family="${MONO}" font-size="13" fill="${STONE}">${f.to}</text>
+  <text x="${rowX + rowW - 16}" y="${rowY + 48}" text-anchor="end" font-family="${SANS}" font-size="13" font-weight="600" fill="${ACCENT}">&#10003; Done</text>`;
+    rowY += rowH + rowGap;
+    return svg;
   })
   .join("\n");
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="${PAPER}"/>
 
+  <!-- Eyebrow -->
+  <text x="80" y="185" font-family="${SANS}" font-size="22" fill="${SLATE}">Local file converter, no data stored.</text>
+  <text x="80" y="217" font-family="${SANS}" font-size="22" fill="${SLATE}">Nothing leaves your browser.</text>
+
   <!-- Title -->
-  <text x="80" y="285" font-family="${SANS}" font-size="96" font-weight="700" letter-spacing="-2" fill="${INK}">Converter</text>
+  <text x="80" y="325" font-family="${SANS}" font-size="92" font-weight="700" letter-spacing="-2" fill="${INK}">Converter</text>
 
-  <!-- Subtitle -->
-  <text x="80" y="396" font-family="${SANS}" font-size="25" fill="${SLATE}">Convert any file, locally.</text>
-  <text x="80" y="428" font-family="${SANS}" font-size="25" fill="${SLATE}">Nothing leaves your browser.</text>
+  <!-- Supported categories -->
+  ${pillsSvg}
 
-  <!-- Graphic representation — sober preview of the real file-list UI:
-       filename, arrow, target-format badge. Mirrors the app's own layout. -->
-  <rect x="${cardX}" y="${cardY}" width="${cardW}" height="${cardH}" rx="28" fill="${CARD}" stroke="${BORDER}" stroke-width="1.5"/>
+  <!-- Graphic — files being dropped and converted -->
 ${rowsSvg}
 </svg>`;
 
