@@ -69,40 +69,86 @@ const pillsSvg = categories
 
 /* ---------- Bloc graphique (droite) — un fichier qui se convertit ------- */
 /* Même hauteur que le bloc de texte, centré sur le même axe vertical.
-   Pas un composant du site (pas de file-row) : une illustration du concept
-   de conversion — un fichier source, une transformation, un fichier cible. */
+   Composition au nombre d'or plutôt qu'un A→B parfaitement symétrique :
+   - le fichier cible (le "après") fait φ fois la hauteur du fichier source
+   - le badge de transformation est posé au point d'or de la largeur
+     (38.2 %), pas au centre — ça donne un poids visuel plus fort au
+     résultat, sur la droite
+   - les deux fichiers partagent la même ligne de base (pas centrés sur
+     le même axe) : un cadrage plus délibéré qu'un alignement milieu. */
+
+const PHI = 1.618033988749895;
 
 const graphicH = textBlockH;
 const graphicTop = textTop;
 const graphicCenterY = graphicTop + graphicH / 2;
+const graphicBottom = graphicTop + graphicH;
 const graphicLeft = MARGIN + 560 + 60; // après la colonne de texte + gouttière
 const graphicRight = CANVAS_W - MARGIN;
 const graphicW = graphicRight - graphicLeft;
 
-const fileW = 140;
-const fileH = graphicH; // même hauteur que le bloc de texte, exactement
-const fold = 30;
-const fileTop = graphicCenterY - fileH / 2;
+const DOC_RATIO = 0.72; // largeur/hauteur d'une page — proportion "papier"
+const targetH = graphicH;
+const targetW = targetH * DOC_RATIO;
+const sourceH = targetH / PHI;
+const sourceW = sourceH * DOC_RATIO;
 
-function fileIcon(x, ext, { badge } = {}) {
-  const y = fileTop;
+// Fichier "carte" : coins arrondis + coin plié en duoton (contour + un
+// triangle de pli légèrement teinté, pas un dégradé ni une ombre portée —
+// juste une 2e teinte, à la manière des icônes de fichier Apple/IBM).
+function fileIcon(x, y, w, h, { fold, corner, ext, fill, tag, tagFill, tagStroke, tagText } = {}) {
+  const body = `M${x + corner} ${y}
+    L${x + w - fold} ${y}
+    L${x + w} ${y + fold}
+    L${x + w} ${y + h - corner}
+    A${corner} ${corner} 0 0 1 ${x + w - corner} ${y + h}
+    L${x + corner} ${y + h}
+    A${corner} ${corner} 0 0 1 ${x} ${y + h - corner}
+    L${x} ${y + corner}
+    A${corner} ${corner} 0 0 1 ${x + corner} ${y} Z`;
+  const foldTri = `M${x + w - fold} ${y} L${x + w - fold} ${y + fold} L${x + w} ${y + fold} Z`;
+  const tagW = Math.min(w - 20, ext.length * 9 + 28);
+  const tagX = x + (w - tagW) / 2;
+  const tagY = y + h - 20 - 30;
   return `
-  <path d="M${x} ${y} L${x + fileW - fold} ${y} L${x + fileW} ${y + fold} L${x + fileW} ${y + fileH} L${x} ${y + fileH} Z" fill="${PAPER}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M${x + fileW - fold} ${y} L${x + fileW - fold} ${y + fold} L${x + fileW} ${y + fold}" fill="none" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>
-  <text x="${x + fileW / 2}" y="${y + fileH * 0.64}" text-anchor="middle" font-family="${SANS}" font-size="17" font-weight="700" letter-spacing="0.5" fill="${INK}">${ext}</text>
-  ${badge ? `<circle cx="${x + fileW - 6}" cy="${y + 6}" r="15" fill="${ACCENT}"/><path d="M${x + fileW - 13} ${y + 6} l5 5 l9 -10" fill="none" stroke="${PAPER}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>` : ""}`;
+  <path d="${body}" fill="${fill}" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="${foldTri}" fill="${BORDER}" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/>
+  <rect x="${tagX}" y="${tagY}" width="${tagW}" height="30" rx="15" fill="${tagFill}"${tagStroke ? ` stroke="${tagStroke}" stroke-width="1.5"` : ""}/>
+  <text x="${x + w / 2}" y="${tagY + 20}" text-anchor="middle" font-family="${SANS}" font-size="13" font-weight="700" letter-spacing="0.5" fill="${tagText}">${ext}</text>
+  ${tag === "done" ? `<circle cx="${x + w - 2}" cy="${y + h - 2}" r="16" fill="${ACCENT}"/><path d="M${x + w - 10} ${y + h - 2} l5 5 l10 -11" fill="none" stroke="${PAPER}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>` : ""}`;
 }
 
-const fileAx = graphicLeft;
-const fileBx = graphicRight - fileW;
-const arrowCx = (fileAx + fileW + fileBx) / 2;
-const arrowCy = graphicCenterY;
-const arrowScale = 2.1;
+// Ligne de base commune : les deux cartes "posent" sur le même bas,
+// au lieu d'être centrées chacune sur graphicCenterY.
+const baseline = graphicBottom;
+const sourceX = graphicLeft;
+const sourceY = baseline - sourceH;
+const goldenX = graphicLeft + graphicW * 0.382; // point d'or de la largeur
+const badgeR = 32;
+const targetX = goldenX + badgeR + 42;
+const targetY = baseline - targetH;
 
 const graphicSvg = `
-${fileIcon(fileAx, "HEIC")}
-${fileIcon(fileBx, "JPG", { badge: true })}
-  <g transform="translate(${arrowCx} ${arrowCy}) scale(${arrowScale})" fill="none" stroke="${INK}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+${fileIcon(sourceX, sourceY, sourceW, sourceH, {
+  fold: 20,
+  corner: 10,
+  ext: "HEIC",
+  fill: PAPER,
+  tagFill: PAPER,
+  tagStroke: BORDER,
+  tagText: SLATE,
+})}
+${fileIcon(targetX, targetY, targetW, targetH, {
+  fold: 26,
+  corner: 14,
+  ext: "JPG",
+  fill: PAPER,
+  tag: "done",
+  tagFill: ACCENT,
+  tagText: PAPER,
+})}
+  <circle cx="${goldenX}" cy="${graphicCenterY}" r="${badgeR}" fill="${ACCENT}"/>
+  <g transform="translate(${goldenX} ${graphicCenterY}) scale(1.3)" fill="none" stroke="${PAPER}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
     <path d="M-16 -8 L10 -8 L2 -16"/>
     <path d="M16 8 L-10 8 L-2 16"/>
   </g>`;
