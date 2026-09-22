@@ -100,9 +100,11 @@ function makeItem(file) {
 }
 
 function addFiles(list) {
+  if (!list.length) return;
   for (const file of list) state.files.push(makeItem(file));
   renderFileList();
   syncSide();
+  if (state.soundOn) playSound("fileAdd");
 }
 
 function removeItem(id) {
@@ -113,6 +115,7 @@ function removeItem(id) {
     state.files.splice(idx, 1);
     renderFileList();
     syncSide();
+    if (state.soundOn) playSound("fileRemove");
   }
 }
 

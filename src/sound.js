@@ -72,6 +72,20 @@ function buildSounds() {
     gain: 0.16,
   });
 
+  // Fichier ajouté (upload/drop) — sweep ascendant, court et léger
+  sounds.fileAdd = ds({
+    source: { type: "sine", frequency: { start: 420, end: 720 } },
+    envelope: { attack: 0.002, decay: 0.1, sustain: 0, release: 0.04 },
+    gain: 0.15,
+  });
+
+  // Fichier retiré (un seul, pas le clear-all) — sweep descendant, court
+  sounds.fileRemove = ds({
+    source: { type: "sine", frequency: { start: 520, end: 240 } },
+    envelope: { attack: 0.002, decay: 0.08, sustain: 0, release: 0.03 },
+    gain: 0.14,
+  });
+
   // Tick — gamme de 10 notes (audio réactif / drag éventuel)
   const scale = [
     220.0, 261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25,
