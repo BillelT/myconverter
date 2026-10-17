@@ -314,6 +314,30 @@ a {
   gap: var(--b-space-8);
 }
 
+.file-row__thumb canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.file-row__frame {
+  display: flex;
+  align-items: center;
+  gap: var(--b-space-8);
+  max-width: 320px;
+}
+
+.file-row__frame input {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-row__frame-value {
+  min-width: 7ch;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .file-row__arrow {
   color: var(--b-gray-600);
   font-size: var(--b-text-sm);

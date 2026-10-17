@@ -1,4 +1,5 @@
 import { baseName, loadImageElement, imageDataToBmp } from "./util.js";
+import { openGif } from "./gif-frames.js";
 
 const RASTER_SOURCES = [
   "png",
@@ -28,11 +29,32 @@ async function decodeHeic(file) {
   return new File([blob], `${baseName(file.name)}.jpg`, { type: "image/jpeg" });
 }
 
-async function drawToCanvas(file) {
+// GIF : frame choisie dans l'UI (opts.gifFrame), sinon la 1re. Le
+// canvas de gif-frames est partagé : on en prend une copie.
+async function gifFrameSource(file, opts) {
+  let gif;
+  try {
+    gif = await openGif(file);
+  } catch (_) {
+    // GIF que gifuct ne sait pas lire : on retombe sur le décodeur
+    // du navigateur (1re image).
+    return loadImageElement(file);
+  }
+  const frame = gif.frameAt((opts && opts.gifFrame) || 0);
+  const copy = document.createElement("canvas");
+  copy.width = gif.width;
+  copy.height = gif.height;
+  copy.getContext("2d").drawImage(frame, 0, 0);
+  return copy;
+}
+
+async function drawToCanvas(file, opts) {
   if (/\.(heic|heif)$/i.test(file.name)) {
     file = await decodeHeic(file);
   }
-  const img = await loadImageElement(file);
+  const img = /\.gif$/i.test(file.name)
+    ? await gifFrameSource(file, opts)
+    : await loadImageElement(file);
   const w = img.naturalWidth || img.width;
   const h = img.naturalHeight || img.height;
   if (!w || !h) throw new Error("Dimensions d'image invalides");
@@ -54,7 +76,7 @@ function canvasToBlob(canvas, mime, quality) {
 }
 
 async function rasterConvert(file, to, opts) {
-  const { canvas, ctx, img } = await drawToCanvas(file);
+  const { canvas, ctx, img } = await drawToCanvas(file, opts);
   if (to === "jpg" || to === "bmp") {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -71,9 +93,9 @@ async function rasterConvert(file, to, opts) {
   return { blob, filename: `${baseName(file.name)}.${to}` };
 }
 
-async function imageToPdf(file) {
+async function imageToPdf(file, opts) {
   const { jsPDF } = await import("jspdf");
-  const { canvas, ctx, img, w, h } = await drawToCanvas(file);
+  const { canvas, ctx, img, w, h } = await drawToCanvas(file, opts);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, w, h);
   ctx.drawImage(img, 0, 0);
@@ -102,7 +124,7 @@ for (const from of RASTER_SOURCES) {
       from,
       to,
       // Le canvas ne garde que la 1re image d'un GIF animé.
-      label: from === "gif" ? `${to.toUpperCase()} (1re image)` : to.toUpperCase(),
+      label: from === "gif" ? `${to.toUpperCase()} (image fixe)` : to.toUpperCase(),
       category: "image",
       run: (file, opts) => rasterConvert(file, to, opts),
     });
@@ -112,6 +134,6 @@ for (const from of RASTER_SOURCES) {
     to: "pdf",
     label: "PDF",
     category: "image",
-    run: (file) => imageToPdf(file),
+    run: (file, opts) => imageToPdf(file, opts),
   });
 }

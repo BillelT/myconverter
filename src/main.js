@@ -6,6 +6,7 @@ import {
 } from "./converters/registry.js";
 import { extOf, triggerDownload } from "./converters/util.js";
 import { cancelMedia, mediaEngine } from "./converters/media.js";
+import { openGif } from "./converters/gif-frames.js";
 import { playSound, setMuted } from "./sound.js";
 
 // ---------- état ----------
@@ -96,12 +97,30 @@ function makeItem(file) {
     error: null,
     thumbUrl: category === "image" ? URL.createObjectURL(file) : null,
     node: null,
+    // GIF : décodeur (gif-frames) et frame à exporter en image fixe.
+    gif: null,
+    frame: 0,
   };
+}
+
+// Le décodeur GIF se charge en tâche de fond ; le curseur de frame
+// n'apparaît qu'une fois le nombre d'images connu.
+function loadGif(it) {
+  openGif(it.file)
+    .then((g) => {
+      it.gif = g;
+      updateRow(it);
+    })
+    .catch(() => {});
 }
 
 function addFiles(list) {
   if (!list.length) return;
-  for (const file of list) state.files.push(makeItem(file));
+  for (const file of list) {
+    const it = makeItem(file);
+    state.files.push(it);
+    if (it.ext === "gif") loadGif(it);
+  }
   renderFileList();
   syncSide();
   if (state.soundOn) playSound("fileAdd");
@@ -140,13 +159,49 @@ function changeTarget(id, to) {
   if (state.soundOn) playSound("tabText");
 }
 
+// ---------- frame GIF ----------
+// Curseur visible pour une cible fixe (non ffmpeg) sur un GIF animé.
+function framePickable(it) {
+  if (!it.gif || it.gif.count < 2) return false;
+  const t = it.targets.find((x) => x.to === it.to);
+  return !!t && !t.heavy;
+}
+
+function changeFrame(it, frame) {
+  it.frame = frame;
+  if (it.status === "done" || it.status === "error") {
+    it.status = "idle";
+    it.result = null;
+    it.error = null;
+    syncSide();
+  }
+  updateRow(it);
+}
+
+// Vignette : la frame choisie, recadrée en "cover".
+function drawFrameThumb(it, canvas) {
+  const src = it.gif.frameAt(it.frame);
+  const ctx = canvas.getContext("2d");
+  const s = Math.max(canvas.width / src.width, canvas.height / src.height);
+  const w = src.width * s;
+  const h = src.height * s;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(src, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+}
+
 // ---------- rendu file row ----------
 function buildRow(it) {
+  const thumbCanvas = el("canvas", {
+    width: 112,
+    height: 112,
+    hidden: true,
+    "aria-hidden": "true",
+  });
   const thumb = el(
     "div",
     { class: "file-row__thumb" },
     it.thumbUrl
-      ? el("img", { src: it.thumbUrl, alt: "" })
+      ? [el("img", { src: it.thumbUrl, alt: "" }), thumbCanvas]
       : el("span", { class: "caption" }, it.ext.toUpperCase()),
   );
 
@@ -194,12 +249,27 @@ function buildRow(it) {
     );
   }
 
+  const frameValue = el("span", { class: "caption file-row__frame-value" });
+  const frameInput = el("input", {
+    type: "range",
+    min: "1",
+    step: "1",
+    "aria-label": "Image du GIF à exporter",
+    oninput: (e) => changeFrame(it, Number(e.target.value) - 1),
+  });
+  const frameRow = el("label", { class: "file-row__frame", hidden: true }, [
+    el("span", { class: "caption" }, "Image"),
+    frameInput,
+    frameValue,
+  ]);
+
   const statusRow = el("div", { class: "file-row__meta" });
   // statusRow rempli dans updateRow
 
   const main = el("div", { class: "file-row__main" }, [
     name,
     meta,
+    frameRow,
     statusRow,
   ]);
 
@@ -228,16 +298,50 @@ function buildRow(it) {
 
   const row = el("div", { class: "file-row" }, [thumb, main, actions]);
 
-  row._parts = { statusRow, dlBtn, removeBtn, select: meta.querySelector("select") };
+  row._parts = {
+    statusRow,
+    dlBtn,
+    removeBtn,
+    select: meta.querySelector("select"),
+    thumbImg: thumb.querySelector("img"),
+    thumbCanvas,
+    frameRow,
+    frameInput,
+    frameValue,
+  };
   return row;
 }
 
 function updateRow(it) {
   if (!it.node) return;
-  const { statusRow, dlBtn, removeBtn, select } = it.node._parts;
+  const {
+    statusRow,
+    dlBtn,
+    removeBtn,
+    select,
+    thumbImg,
+    thumbCanvas,
+    frameRow,
+    frameInput,
+    frameValue,
+  } = it.node._parts;
 
   if (select) select.disabled = it.status === "running";
   if (select && select.value !== it.to) select.value = it.to;
+
+  const pick = framePickable(it);
+  frameRow.hidden = !pick;
+  if (thumbImg) thumbImg.hidden = pick;
+  thumbCanvas.hidden = !pick;
+  if (pick) {
+    const n = it.gif.count;
+    frameInput.max = String(n);
+    frameInput.value = String(it.frame + 1);
+    frameInput.disabled = it.status === "running";
+    frameInput.setAttribute("aria-valuetext", `Image ${it.frame + 1} sur ${n}`);
+    frameValue.textContent = `${it.frame + 1} / ${n}`;
+    drawFrameThumb(it, thumbCanvas);
+  }
 
   dlBtn.hidden = it.status !== "done";
   removeBtn.disabled = it.status === "running";
@@ -353,7 +457,11 @@ async function convertOne(it) {
       it.file,
       it.ext,
       it.to,
-      { quality: state.quality, videoMaxHeight: state.videoMaxHeight },
+      {
+        quality: state.quality,
+        videoMaxHeight: state.videoMaxHeight,
+        gifFrame: it.frame,
+      },
       (p) => {
         it.progress = p;
         state.engine = mediaEngine();
