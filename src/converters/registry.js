@@ -92,7 +92,7 @@ export function conversionMatrix() {
   const byFrom = new Map();
   for (const d of ALL) {
     if (!byFrom.has(d.from)) byFrom.set(d.from, new Set());
-    byFrom.get(d.from).add(d.to);
+    byFrom.get(d.from).add(d.ext || d.to);
   }
   return [...byFrom.entries()]
     .map(([from, set]) => ({

@@ -7,6 +7,7 @@ import {
 import { extOf, triggerDownload } from "./converters/util.js";
 import { cancelMedia, mediaEngine } from "./converters/media.js";
 import { openGif } from "./converters/gif-frames.js";
+import { showScrubber, hideScrubber } from "./frame-scrubber.js";
 import { playSound, setMuted } from "./sound.js";
 
 // ---------- état ----------
@@ -176,7 +177,27 @@ function changeFrame(it, frame) {
     syncSide();
   }
   updateRow(it);
+  previewFrame(it);
 }
+
+// Aperçu plein écran : tenu tant que le pointeur presse le curseur,
+// ou 700 ms après la dernière touche au clavier.
+let scrubbing = false;
+let scrubTimer = null;
+
+function previewFrame(it) {
+  clearTimeout(scrubTimer);
+  showScrubber(it.gif, it.frame);
+  if (!scrubbing) scrubTimer = setTimeout(hideScrubber, 700);
+}
+
+function endScrub() {
+  if (!scrubbing) return;
+  scrubbing = false;
+  hideScrubber();
+}
+window.addEventListener("pointerup", endScrub);
+window.addEventListener("pointercancel", endScrub);
 
 // Vignette : la frame choisie, recadrée en "cover".
 function drawFrameThumb(it, canvas) {
@@ -256,6 +277,14 @@ function buildRow(it) {
     step: "1",
     "aria-label": "Image du GIF à exporter",
     oninput: (e) => changeFrame(it, Number(e.target.value) - 1),
+    onpointerdown: () => {
+      scrubbing = true;
+      previewFrame(it);
+    },
+    onblur: () => {
+      clearTimeout(scrubTimer);
+      hideScrubber();
+    },
   });
   const frameRow = el("label", { class: "file-row__frame", hidden: true }, [
     el("span", { class: "caption" }, "Image"),

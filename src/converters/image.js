@@ -118,8 +118,19 @@ export const defs = [];
 for (const from of RASTER_SOURCES) {
   for (const to of RASTER_TARGETS) {
     if (from === to) continue;
-    // gif → webp : version animée fournie par media.js.
-    if (from === "gif" && to === "webp") continue;
+    // gif → webp animé fourni par media.js ; ici la version fixe,
+    // sous une clé distincte pour coexister dans le sélecteur.
+    if (from === "gif" && to === "webp") {
+      defs.push({
+        from,
+        to: "webp-still",
+        ext: "webp",
+        label: "WEBP (image fixe)",
+        category: "image",
+        run: (file, opts) => rasterConvert(file, "webp", opts),
+      });
+      continue;
+    }
     defs.push({
       from,
       to,

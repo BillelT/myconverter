@@ -30,8 +30,11 @@ async function open(file) {
 
   // Les frames sont des patchs à composer dans l'ordre, selon la
   // méthode de disposal de la frame précédente. On garde un curseur
-  // pour avancer sans tout recomposer ; un retour en arrière repart
-  // de zéro.
+  // pour avancer sans tout recomposer, et un point de reprise toutes
+  // les CHECKPOINT frames pour qu'un retour en arrière (scrub du
+  // curseur) ne reparte pas de zéro.
+  const CHECKPOINT = 16;
+  const checkpoints = new Map();
   let idx = -1;
   let prev = null;
   let saved = null;
@@ -41,6 +44,17 @@ async function open(file) {
     idx = -1;
     prev = null;
     saved = null;
+  }
+
+  // Revient au point de reprise le plus proche avant `target`.
+  function rewind(target) {
+    const at = Math.floor(target / CHECKPOINT) * CHECKPOINT;
+    const cp = checkpoints.get(at);
+    if (!cp) return reset();
+    ctx.putImageData(cp.image, 0, 0);
+    idx = at;
+    prev = cp.prev;
+    saved = cp.saved;
   }
 
   function step() {
@@ -63,8 +77,17 @@ async function open(file) {
       // patch laissent voir les frames précédentes.
       ctx.drawImage(patch, d.left, d.top);
     }
-    prev = f;
+    // Seuls dims et disposal servent à l'étape suivante : on ne garde
+    // pas le patch décompressé.
+    prev = { dims: d, disposalType: f.disposalType };
     idx++;
+    if (idx % CHECKPOINT === 0 && !checkpoints.has(idx)) {
+      checkpoints.set(idx, {
+        image: ctx.getImageData(0, 0, width, height),
+        prev,
+        saved,
+      });
+    }
   }
 
   return {
@@ -75,7 +98,7 @@ async function open(file) {
     // tout appel suivant.
     frameAt(i) {
       const target = Math.max(0, Math.min(raw.length - 1, i));
-      if (target < idx) reset();
+      if (target < idx) rewind(target);
       while (idx < target) step();
       return canvas;
     },
