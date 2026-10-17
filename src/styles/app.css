@@ -411,6 +411,7 @@ a {
 
 /* ---------- Aperçu de frame GIF (scrub) --------------------------------- */
 
+/* Posé par-dessus l'interface, qui reste visible sous un voile léger. */
 .scrubber {
   position: fixed;
   inset: 0;
@@ -421,11 +422,10 @@ a {
   justify-content: center;
   gap: var(--b-space-16);
   padding: var(--b-space-16);
-  /* Fond opaque : le fondu de la pellicule s'y raccorde sans couture. */
-  background: var(--b-surface-muted);
+  background: oklch(0 0 0 / 0.15);
   pointer-events: none;
   opacity: 0;
-  transition: opacity var(--b-duration) var(--b-ease);
+  transition: opacity var(--b-duration) var(--b-ease-out);
 }
 
 .scrubber.is-open {
@@ -440,38 +440,31 @@ a {
   border-radius: var(--b-radius-md);
   outline: 1px solid oklch(0 0 0 / 0.1);
   outline-offset: -1px;
+  /* Grande surface au-dessus de contenu chargé : ombre profonde. */
+  box-shadow:
+    0 2px 6px oklch(0 0 0 / 0.08),
+    0 24px 64px oklch(0 0 0 / 0.22);
 }
 
-/* Fenêtre de 2×around+1 vignettes ; la pellicule glisse dessous. */
+/* Fenêtre de 2×around+1 vignettes ; la pellicule glisse dessous. Les
+   bords s'effacent par masque : le fondu reste propre quel que soit
+   ce qui passe derrière. */
 .scrubber__filmstrip {
   position: relative;
   width: calc(
     (2 * var(--around) + 1) * var(--thumb) + 2 * var(--around) * var(--gap)
   );
   max-width: 100%;
-  padding-block: 4px;
+  padding-block: 8px;
   overflow: hidden;
-}
-
-/* Fondu des bords dans la couleur du fond. */
-.scrubber__filmstrip::before,
-.scrubber__filmstrip::after {
-  content: "";
-  position: absolute;
-  inset-block: 0;
-  z-index: 1;
-  width: calc(var(--thumb) * 1.5);
-  pointer-events: none;
-}
-
-.scrubber__filmstrip::before {
-  left: 0;
-  background: linear-gradient(to right, var(--b-surface-muted), transparent);
-}
-
-.scrubber__filmstrip::after {
-  right: 0;
-  background: linear-gradient(to left, var(--b-surface-muted), transparent);
+  --fade: calc(var(--thumb) * 1.5);
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--fade),
+    #000 calc(100% - var(--fade)),
+    transparent
+  );
 }
 
 .scrubber__strip {
@@ -479,7 +472,7 @@ a {
   gap: var(--gap);
   /* La frame 0 démarre au centre de la fenêtre. */
   padding-inline-start: calc(var(--around) * (var(--thumb) + var(--gap)));
-  transition: transform var(--b-duration-slow) var(--b-ease);
+  transition: transform var(--b-duration-slow) var(--b-ease-out);
 }
 
 .scrubber__thumb {
@@ -487,24 +480,38 @@ a {
   width: var(--thumb);
   height: var(--thumb);
   border-radius: var(--b-radius-md);
-  opacity: 0.55;
-  transition: opacity var(--b-duration) var(--b-ease-default);
+  opacity: 0.6;
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.16);
+  transition-property: opacity, scale;
+  transition-duration: var(--b-duration-slow);
+  transition-timing-function: var(--b-ease-out);
 }
 
+/* Frame courante : pleine opacité et légèrement agrandie. */
 .scrubber__thumb.is-current {
   opacity: 1;
-  outline: 2px solid var(--b-ink);
-  outline-offset: 2px;
+  scale: 1.14;
 }
 
 .scrubber__counter {
+  padding: 2px var(--b-space-8);
+  border-radius: var(--b-radius-full);
+  background: var(--b-surface);
+  color: var(--b-text);
   font-size: var(--b-text-sm);
-  color: var(--b-text-muted);
   font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.12);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .scrubber__strip,
+  .scrubber__thumb {
+    transition-property: opacity;
+  }
   .scrubber__strip {
     transition: none;
+  }
+  .scrubber__thumb.is-current {
+    scale: none;
   }
 }
