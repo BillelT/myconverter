@@ -8,9 +8,15 @@ import { defs as mediaDefs } from "./media.js";
 // les cibles canvas (1re image) et deviennent le choix par défaut.
 const ALL = [...mediaDefs, ...imageDefs, ...documentDefs, ...dataDefs];
 
-// from-ext -> [def]
+// from-ext -> [def] (conversions) ; from-ext -> def (compression même
+// format, action à part : bouton "Compresser", pas une cible de la liste).
 const TABLE = new Map();
+const COMPRESS = new Map();
 for (const d of ALL) {
+  if (d.to === "compress") {
+    COMPRESS.set(d.from, d);
+    continue;
+  }
   if (!TABLE.has(d.from)) TABLE.set(d.from, []);
   TABLE.get(d.from).push(d);
 }
@@ -74,6 +80,21 @@ export function targetsFor(ext) {
   }));
 }
 
+export function canCompress(ext) {
+  return COMPRESS.has(canonicalExt(ext));
+}
+
+// La compression ffmpeg (audio, vidéo, GIF) charge le moteur ~30 Mo.
+export function compressIsHeavy(ext) {
+  return !!COMPRESS.get(canonicalExt(ext))?.heavy;
+}
+
+export async function runCompression(file, fromExt, opts, onProgress) {
+  const def = COMPRESS.get(canonicalExt(fromExt));
+  if (!def) throw new Error(`Compression ${fromExt} non supportée`);
+  return def.run(file, opts || {}, onProgress);
+}
+
 export function isSupported(ext) {
   return TABLE.has(canonicalExt(ext));
 }
@@ -91,6 +112,7 @@ export async function runConversion(file, fromExt, toExt, opts, onProgress) {
 export function conversionMatrix() {
   const byFrom = new Map();
   for (const d of ALL) {
+    if (d.to === "compress") continue;
     if (!byFrom.has(d.from)) byFrom.set(d.from, new Set());
     byFrom.get(d.from).add(d.ext || d.to);
   }

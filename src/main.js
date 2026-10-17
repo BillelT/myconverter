@@ -2,6 +2,9 @@ import {
   categoryOf,
   targetsFor,
   runConversion,
+  canCompress,
+  compressIsHeavy,
+  runCompression,
   CATEGORY_LABELS,
 } from "./converters/registry.js";
 import { extOf, triggerDownload } from "./converters/util.js";
@@ -95,6 +98,9 @@ function makeItem(file) {
     category,
     targets,
     to: targets[0] ? targets[0].to : null,
+    compressible: canCompress(ext),
+    // Dernière action lancée : "convert" | "compress".
+    action: null,
     status: "idle",
     progress: null,
     result: null,
@@ -328,17 +334,25 @@ function buildRow(it) {
   const dlBtn = el(
     "button",
     {
-      class: "btn btn-tiertary",
+      class: "btn btn-secondary",
       hidden: true,
       onclick: () => downloadOne(it.id),
     },
     "Télécharger",
   );
+  const compressBtn = el(
+    "button",
+    {
+      class: "btn btn-secondary",
+      onclick: () => convertSingle(it.id, "compress"),
+    },
+    "Compresser",
+  );
   const convertBtn = el(
     "button",
     {
       class: "btn btn-secondary",
-      onclick: () => convertSingle(it.id),
+      onclick: () => convertSingle(it.id, "convert"),
     },
     "Convertir",
   );
@@ -353,6 +367,7 @@ function buildRow(it) {
 
   const actions = el("div", { class: "file-row__actions" }, [
     dlBtn,
+    compressBtn,
     convertBtn,
     removeBtn,
   ]);
@@ -362,6 +377,7 @@ function buildRow(it) {
   row._parts = {
     statusRow,
     dlBtn,
+    compressBtn,
     convertBtn,
     removeBtn,
     select: meta.querySelector("select"),
@@ -379,6 +395,7 @@ function updateRow(it) {
   const {
     statusRow,
     dlBtn,
+    compressBtn,
     convertBtn,
     removeBtn,
     select,
@@ -407,10 +424,14 @@ function updateRow(it) {
   }
 
   dlBtn.hidden = it.status !== "done";
-  convertBtn.hidden =
-    !it.targets.length || it.status === "done" || it.status === "running";
+  // Une fois une action terminée, son bouton laisse la place à
+  // "Télécharger" ; l'autre action reste disponible.
+  const running = it.status === "running";
+  const doneBy = it.status === "done" ? it.action : null;
+  compressBtn.hidden = !it.compressible || running || doneBy === "compress";
+  convertBtn.hidden = !it.targets.length || running || doneBy === "convert";
+  compressBtn.disabled = state.busy;
   convertBtn.disabled = state.busy;
-  convertBtn.textContent = it.to === "compress" ? "Compresser" : "Convertir";
   removeBtn.disabled = it.status === "running";
 
   statusRow.replaceChildren();
@@ -419,13 +440,17 @@ function updateRow(it) {
   if (it.status === "running") {
     const pct =
       it.progress != null ? Math.round(it.progress * 100) : null;
-    const usesFfmpeg = it.targets.some((t) => t.to === it.to && t.heavy);
+    const compressing = it.action === "compress";
+    const usesFfmpeg = compressing
+      ? compressIsHeavy(it.ext)
+      : it.targets.some((t) => t.to === it.to && t.heavy);
+    const verb = compressing ? "Compression" : "Conversion";
     const label =
       pct != null
-        ? `Conversion ${pct}%`
+        ? `${verb} ${pct}%`
         : usesFfmpeg
           ? "Préparation du moteur ffmpeg (~30 Mo, 1re fois)…"
-          : "Conversion…";
+          : `${verb}…`;
     statusRow.append(
       el("span", { class: "status" }, [
         el("span", { class: "spinner", "aria-hidden": "true" }),
@@ -496,9 +521,11 @@ function syncSide() {
     done > 1 ? "Télécharger tout (.zip)" : "Télécharger";
 
   refs.videoSection.hidden = !hasVideo();
-  refs.compressSection.hidden = !state.files.some((f) => f.to === "compress");
+  refs.compressSection.hidden = !state.files.some((f) => f.compressible);
   for (const it of state.files) {
-    if (it.node) it.node._parts.convertBtn.disabled = state.busy;
+    if (!it.node) continue;
+    it.node._parts.compressBtn.disabled = state.busy;
+    it.node._parts.convertBtn.disabled = state.busy;
   }
 
   refs.heavyHint.hidden = !heavySelected();
@@ -512,31 +539,31 @@ function syncSide() {
 }
 
 // ---------- conversion ----------
-async function convertOne(it) {
-  if (!it.to) return;
+async function convertOne(it, action = "convert") {
+  if (action === "convert" && !it.to) return;
+  it.action = action;
   it.status = "running";
   it.progress = null;
   it.error = null;
   updateRow(it);
   syncSide();
   try {
-    const result = await runConversion(
-      it.file,
-      it.ext,
-      it.to,
-      {
-        quality: state.quality,
-        videoMaxHeight: state.videoMaxHeight,
-        compressLevel: state.compressLevel,
-        gifFrame: it.frame,
-      },
-      (p) => {
-        it.progress = p;
-        state.engine = mediaEngine();
-        updateRow(it);
-        syncSide();
-      },
-    );
+    const opts = {
+      quality: state.quality,
+      videoMaxHeight: state.videoMaxHeight,
+      compressLevel: state.compressLevel,
+      gifFrame: it.frame,
+    };
+    const onProgress = (p) => {
+      it.progress = p;
+      state.engine = mediaEngine();
+      updateRow(it);
+      syncSide();
+    };
+    const result =
+      action === "compress"
+        ? await runCompression(it.file, it.ext, opts, onProgress)
+        : await runConversion(it.file, it.ext, it.to, opts, onProgress);
     it.result = result;
     it.status = "done";
     it.progress = null;
@@ -564,7 +591,8 @@ async function convertAll() {
   if (state.soundOn) playSound("shuffle");
   for (const it of state.files) {
     if (aborted) break;
-    if (it.targets.length && it.status !== "done") {
+    // Un fichier seulement compressé reste à convertir.
+    if (it.targets.length && !(it.status === "done" && it.action === "convert")) {
       // eslint-disable-next-line no-await-in-loop
       await convertOne(it);
     }
@@ -573,15 +601,15 @@ async function convertAll() {
   syncSide();
 }
 
-// Un seul fichier (bouton de la ligne). Même verrou que "Tout
+// Un seul fichier (boutons de la ligne). Même verrou que "Tout
 // convertir" : le moteur ffmpeg ne traite qu'un fichier à la fois.
-async function convertSingle(id) {
+async function convertSingle(id, action) {
   const it = state.files.find((f) => f.id === id);
   if (!it || state.busy) return;
   aborted = false;
   state.busy = true;
   syncSide();
-  await convertOne(it);
+  await convertOne(it, action);
   state.busy = false;
   syncSide();
 }

@@ -90,10 +90,9 @@ a {
   border-right: 1px solid var(--b-border);
 }
 
-/* Éditeur = panneau étroit : cta / secondaire / tiertiaire passent en 14px (seule dérogation b-editor) */
+/* Éditeur = panneau étroit : cta / secondaire passent en 14px (seule dérogation b-editor) */
 .editor .btn.cta,
-.editor .btn.btn-secondary,
-.editor .btn.btn-tiertary {
+.editor .btn.btn-secondary {
   font-size: var(--b-text-sm);
 }
 
@@ -353,6 +352,13 @@ a {
   align-items: center;
   gap: var(--b-space-8);
   flex-shrink: 0;
+}
+
+/* Écart voulu au DS : dans une ligne de fichier, le secondaire garde
+   16px / 500 mais avec un padding vertical réduit (4 au lieu de 8),
+   pour ne pas écraser la ligne sous trois boutons. */
+.file-row__actions .btn-secondary {
+  padding: var(--b-space-4) var(--b-space-12);
 }
 
 /* ---------- Status ---------- */

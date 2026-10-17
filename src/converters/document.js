@@ -1,4 +1,10 @@
-import { baseName, readAsArrayBuffer, readAsText } from "./util.js";
+import {
+  baseName,
+  readAsArrayBuffer,
+  readAsText,
+  compressLevel,
+  finishCompress,
+} from "./util.js";
 
 function escapeHtml(s) {
   return s
@@ -113,6 +119,45 @@ async function pdfToImages(file) {
     pages.push(blob);
   }
   return pages;
+}
+
+// Compression PDF : chaque page est re-rendue en JPEG à résolution
+// réduite puis réassemblée. Très efficace sur les scans et PDF chargés
+// d'images ; le texte n'est plus sélectionnable. Sur un PDF surtout
+// textuel le résultat est souvent plus lourd : finishCompress garde
+// alors l'original.
+const PDF_DPI = [150, 110, 80];
+const PDF_QUALITY = [0.8, 0.65, 0.5];
+
+async function compressPdf(file, opts, onProgress) {
+  const l = compressLevel(opts);
+  const lib = await getPdfjs();
+  const { jsPDF } = await import("jspdf");
+  const src = await lib.getDocument({ data: await readAsArrayBuffer(file) })
+    .promise;
+  let out = null;
+  for (let p = 1; p <= src.numPages; p++) {
+    const page = await src.getPage(p);
+    // Taille de page en points (1/72 po), conservée telle quelle.
+    const base = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: PDF_DPI[l] / 72 });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    const jpeg = canvas.toDataURL("image/jpeg", PDF_QUALITY[l]);
+    const size = [base.width, base.height];
+    const orientation = base.width > base.height ? "landscape" : "portrait";
+    if (!out) out = new jsPDF({ unit: "pt", format: size, orientation });
+    else out.addPage(size, orientation);
+    out.addImage(jpeg, "JPEG", 0, 0, base.width, base.height);
+    page.cleanup();
+    if (onProgress) onProgress(p / src.numPages);
+  }
+  return finishCompress(file, "pdf", { blob: out.output("blob") });
 }
 
 async function textToPdf(text) {
@@ -355,3 +400,12 @@ export const defs = [
     },
   },
 ];
+
+defs.push({
+  from: "pdf",
+  to: "compress",
+  ext: "pdf",
+  label: "Compresser (PDF)",
+  category: "document",
+  run: (file, opts, onProgress) => compressPdf(file, opts, onProgress),
+});
