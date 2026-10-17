@@ -248,11 +248,11 @@ function updateRow(it) {
   if (it.status === "running") {
     const pct =
       it.progress != null ? Math.round(it.progress * 100) : null;
-    const isMedia = it.category === "audio" || it.category === "video";
+    const usesFfmpeg = it.targets.some((t) => t.to === it.to && t.heavy);
     const label =
       pct != null
         ? `Conversion ${pct}%`
-        : isMedia
+        : usesFfmpeg
           ? "Préparation du moteur ffmpeg (~30 Mo, 1re fois)…"
           : "Conversion…";
     statusRow.append(

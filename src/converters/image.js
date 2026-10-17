@@ -96,10 +96,13 @@ export const defs = [];
 for (const from of RASTER_SOURCES) {
   for (const to of RASTER_TARGETS) {
     if (from === to) continue;
+    // gif → webp : version animée fournie par media.js.
+    if (from === "gif" && to === "webp") continue;
     defs.push({
       from,
       to,
-      label: to.toUpperCase(),
+      // Le canvas ne garde que la 1re image d'un GIF animé.
+      label: from === "gif" ? `${to.toUpperCase()} (1re image)` : to.toUpperCase(),
       category: "image",
       run: (file, opts) => rasterConvert(file, to, opts),
     });

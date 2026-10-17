@@ -143,6 +143,7 @@ const MIME = {
   mkv: "video/x-matroska",
   avi: "video/x-msvideo",
   gif: "image/gif",
+  webp: "image/webp",
 };
 
 // Nombre de threads exploitables (le coeur MT en profite, le
@@ -200,6 +201,7 @@ function argsFor(from, to, inName, outName, opts) {
       : null;
   const T = String(threadCount());
 
+  if (from === "gif") return gifArgs(to, inName, outName, opts);
   if (VIDEO.includes(from) && to === "mp3") {
     return [...inputArgs(inName), "-vn", "-q:a", "2", outName];
   }
@@ -252,6 +254,65 @@ function argsFor(from, to, inName, outName, opts) {
     ...scaleArgs(opts && opts.videoMaxHeight),
     "-threads",
     T,
+    outName,
+  ];
+}
+
+// GIF animé → format animé plus léger. L'animation est conservée
+// (le pipeline canvas d'image.js n'en garde que la 1re image).
+// Dimensions forcées paires pour x264/vpx (yuv420p).
+function gifArgs(to, inName, outName, opts) {
+  const even = ["-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"];
+  if (to === "webp") {
+    const q = opts && typeof opts.quality === "number" ? opts.quality : 0.8;
+    return [
+      ...inputArgs(inName),
+      "-c:v",
+      "libwebp_anim",
+      "-q:v",
+      String(Math.round(q * 100)),
+      "-compression_level",
+      "4",
+      "-loop",
+      "0",
+      "-an",
+      outName,
+    ];
+  }
+  if (to === "webm") {
+    return [
+      ...inputArgs(inName),
+      ...even,
+      "-c:v",
+      "libvpx",
+      "-crf",
+      "20",
+      "-b:v",
+      "1M",
+      "-deadline",
+      "good",
+      "-cpu-used",
+      "4",
+      "-pix_fmt",
+      "yuv420p",
+      "-an",
+      outName,
+    ];
+  }
+  return [
+    ...inputArgs(inName),
+    ...even,
+    "-c:v",
+    "libx264",
+    "-preset",
+    "fast",
+    "-crf",
+    "24",
+    "-pix_fmt",
+    "yuv420p",
+    "-movflags",
+    "+faststart",
+    "-an",
     outName,
   ];
 }
@@ -384,6 +445,24 @@ async function runGif(file, from, opts, onProgress) {
 }
 
 export const defs = [];
+
+// GIF animé : sorties via ffmpeg pour garder l'animation. Rangées
+// avant les cibles canvas (cf. registry) → WEBP animé par défaut.
+for (const [to, label] of [
+  ["webp", "WEBP animé"],
+  ["mp4", "MP4 (vidéo)"],
+  ["webm", "WEBM (vidéo)"],
+]) {
+  defs.push({
+    from: "gif",
+    to,
+    label,
+    category: "image",
+    heavy: true,
+    run: (file, opts, onProgress) =>
+      runMedia(file, "gif", to, opts, onProgress),
+  });
+}
 
 for (const from of AUDIO) {
   for (const to of AUDIO) {

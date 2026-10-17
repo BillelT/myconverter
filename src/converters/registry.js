@@ -4,7 +4,9 @@ import { defs as documentDefs } from "./document.js";
 import { defs as dataDefs } from "./data.js";
 import { defs as mediaDefs } from "./media.js";
 
-const ALL = [...imageDefs, ...documentDefs, ...dataDefs, ...mediaDefs];
+// mediaDefs en tête : pour un GIF, les cibles animées passent avant
+// les cibles canvas (1re image) et deviennent le choix par défaut.
+const ALL = [...mediaDefs, ...imageDefs, ...documentDefs, ...dataDefs];
 
 // from-ext -> [def]
 const TABLE = new Map();
