@@ -1,4 +1,4 @@
-import { baseName } from "./util.js";
+import { baseName, compressLevel, finishCompress } from "./util.js";
 
 const AUDIO = ["mp3", "wav", "ogg", "m4a", "aac", "flac"];
 const VIDEO = ["mp4", "webm", "mov", "mkv", "avi"];
@@ -317,6 +317,93 @@ function gifArgs(to, inName, outName, opts) {
   ];
 }
 
+// Compression même format, par niveau (0 légère → 2 forte). La
+// résolution vidéo suit le réglage "Résolution vidéo (max)".
+function compressArgs(ext, _to, inName, outName, opts) {
+  const l = compressLevel(opts);
+  const T = String(threadCount());
+  const scale =
+    opts && opts.videoMaxHeight && opts.videoMaxHeight !== "source"
+      ? scaleArgs(opts.videoMaxHeight)
+      : ["-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2"];
+  if (ext === "webm") {
+    return [
+      ...inputArgs(inName),
+      ...scale,
+      "-c:v",
+      "libvpx",
+      "-crf",
+      ["10", "30", "45"][l],
+      "-b:v",
+      ["2M", "1M", "500k"][l],
+      "-deadline",
+      "good",
+      "-cpu-used",
+      "4",
+      "-threads",
+      T,
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      ["4", "2", "0"][l],
+      outName,
+    ];
+  }
+  if (VIDEO.includes(ext)) {
+    return [
+      ...inputArgs(inName),
+      ...scale,
+      "-c:v",
+      "libx264",
+      "-preset",
+      "veryfast",
+      "-crf",
+      ["24", "28", "32"][l],
+      "-threads",
+      T,
+      "-pix_fmt",
+      "yuv420p",
+      "-c:a",
+      "aac",
+      "-b:a",
+      ["128k", "96k", "64k"][l],
+      ...(ext === "mkv" ? [] : ["-movflags", "+faststart"]),
+      outName,
+    ];
+  }
+  if (ext === "ogg") {
+    return [
+      ...inputArgs(inName),
+      "-vn",
+      "-c:a",
+      "libvorbis",
+      "-q:a",
+      ["4", "2", "0"][l],
+      outName,
+    ];
+  }
+  // mp3, m4a, aac
+  return [
+    ...inputArgs(inName),
+    "-vn",
+    "-c:a",
+    ext === "mp3" ? "libmp3lame" : "aac",
+    "-b:a",
+    ["160k", "128k", "96k"][l],
+    outName,
+  ];
+}
+
+// GIF : palette réduite + tramage ordonné ; stats_mode=diff et
+// diff_mode=rectangle ne ré-encodent que ce qui bouge entre frames.
+function compressGif(file, opts, onProgress) {
+  const l = compressLevel(opts);
+  return runGif(file, "gif", onProgress, {
+    gen: `palettegen=max_colors=${[256, 128, 64][l]}:stats_mode=diff`,
+    use: `paletteuse=dither=bayer:bayer_scale=${[5, 4, 3][l]}:diff_mode=rectangle`,
+  });
+}
+
 // Un crash du coeur (memory access out of bounds, abort…) laisse
 // l'instance inutilisable : on la jette pour qu'un nouvel essai
 // recharge un coeur frais.
@@ -366,7 +453,8 @@ async function readOutput(f, outName) {
   return data;
 }
 
-async function runMedia(file, from, to, opts, onProgress) {
+// buildArgs optionnel : remplace argsFor (ex. compression même format).
+async function runMedia(file, from, to, opts, onProgress, buildArgs = argsFor) {
   const { fetchFile } = await import("@ffmpeg/util");
   canceled = false;
   let f;
@@ -378,7 +466,7 @@ async function runMedia(file, from, to, opts, onProgress) {
     // Selon la version du wrapper, exec() renvoie le code de
     // sortie ou undefined : on ne s'y fie pas, on vérifie que le
     // fichier de sortie a bien été produit.
-    await f.exec(argsFor(from, to, inName, outName, opts));
+    await f.exec(buildArgs(from, to, inName, outName, opts));
     if (canceled) throw new Error("Conversion annulée");
     const data = await readOutput(f, outName);
     await f.deleteFile(inName).catch(() => {});
@@ -397,23 +485,27 @@ async function runMedia(file, from, to, opts, onProgress) {
 }
 
 // GIF en deux passes (palettegen → paletteuse) : la méthode mono-
-// passe produit souvent un fichier vide dans ffmpeg.wasm. scale en
-// -2 (hauteur paire imposée) pour éviter les échecs d'encodeur.
-async function runGif(file, from, opts, onProgress) {
+// passe produit souvent un fichier vide dans ffmpeg.wasm. vf : filtres
+// appliqués avant la palette (vide = image source telle quelle) ;
+// limit : options de durée.
+async function runGif(
+  file,
+  from,
+  onProgress,
+  { vf = "", limit = [], gen = "palettegen", use = "paletteuse" } = {},
+) {
   const { fetchFile } = await import("@ffmpeg/util");
   canceled = false;
   let f;
   try {
     f = await getFFmpeg(onProgress);
     const inName = `in.${from}`;
-    const vf = "fps=12,scale=480:-2:flags=lanczos";
     await f.writeFile(inName, await fetchFile(file));
     await f.exec([
       ...inputArgs(inName),
-      "-t",
-      "15",
+      ...limit,
       "-vf",
-      `${vf},palettegen`,
+      vf ? `${vf},${gen}` : gen,
       "-y",
       "pal.png",
     ]);
@@ -421,10 +513,9 @@ async function runGif(file, from, opts, onProgress) {
       ...inputArgs(inName),
       "-i",
       "pal.png",
-      "-t",
-      "15",
+      ...limit,
       "-filter_complex",
-      `${vf}[x];[x][1:v]paletteuse`,
+      vf ? `${vf}[x];[x][1:v]${use}` : `[0:v][1:v]${use}`,
       "-y",
       "out.gif",
     ]);
@@ -507,6 +598,42 @@ for (const from of VIDEO) {
     label: "GIF (15s)",
     category: "video",
     heavy: true,
-    run: (file, opts, onProgress) => runGif(file, from, opts, onProgress),
+    run: (file, opts, onProgress) =>
+      runGif(file, from, onProgress, {
+        vf: "fps=12,scale=480:-2:flags=lanczos",
+        limit: ["-t", "15"],
+      }),
+  });
+}
+
+// Compression même format (pas wav/flac : sans perte par nature ; pas
+// avi : conteneur trop ancien pour x264/aac).
+const COMPRESSIBLE = [
+  ["gif", "image"],
+  ["mp4", "video"],
+  ["mov", "video"],
+  ["mkv", "video"],
+  ["webm", "video"],
+  ["mp3", "audio"],
+  ["m4a", "audio"],
+  ["aac", "audio"],
+  ["ogg", "audio"],
+];
+for (const [ext, category] of COMPRESSIBLE) {
+  defs.push({
+    from: ext,
+    to: "compress",
+    ext,
+    label: `Compresser (${ext.toUpperCase()})`,
+    category,
+    heavy: true,
+    run: async (file, opts, onProgress) =>
+      finishCompress(
+        file,
+        ext,
+        ext === "gif"
+          ? await compressGif(file, opts, onProgress)
+          : await runMedia(file, ext, ext, opts, onProgress, compressArgs),
+      ),
   });
 }

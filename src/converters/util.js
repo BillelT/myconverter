@@ -105,3 +105,32 @@ export function triggerDownload(blob, filename) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+// ---------- Compression (même format) ----------
+
+// Niveau choisi dans l'UI → index 0 (légère) | 1 (équilibrée) | 2 (forte).
+const COMPRESS_LEVELS = { light: 0, medium: 1, strong: 2 };
+export function compressLevel(opts) {
+  return COMPRESS_LEVELS[opts && opts.compressLevel] ?? 1;
+}
+
+// Résultat d'une compression : renommé en "-min", et si le fichier ne
+// rétrécit pas, on rend l'original tel quel plutôt qu'un fichier plus
+// lourd.
+export function finishCompress(file, ext, out) {
+  if (out.blob.size >= file.size) {
+    return {
+      blob: file,
+      filename: file.name,
+      before: file.size,
+      after: file.size,
+      kept: true,
+    };
+  }
+  return {
+    blob: out.blob,
+    filename: `${baseName(file.name)}-min.${ext}`,
+    before: file.size,
+    after: out.blob.size,
+  };
+}

@@ -15,6 +15,7 @@ const state = {
   files: [],
   quality: 0.92,
   videoMaxHeight: "480",
+  compressLevel: "medium",
   soundOn: true,
   dragOver: false,
   busy: false,
@@ -67,6 +68,8 @@ const refs = {
   quality: $("[data-quality]"),
   qualityValue: $("[data-quality-value]"),
   videoSection: $("[data-video-section]"),
+  compressSection: $("[data-compress-section]"),
+  compressLevel: $("[data-compress-level]"),
   videoMaxHeight: $("[data-video-max-height]"),
   convertSide: $("[data-convert-all-side]"),
   cancelSide: $("[data-cancel-side]"),
@@ -210,6 +213,26 @@ function drawFrameThumb(it, canvas) {
   ctx.drawImage(src, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
 }
 
+// ---------- tailles ----------
+const sizeFmt = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
+function formatSize(bytes) {
+  if (bytes < 1024) return `${bytes} o`;
+  if (bytes < 1024 * 1024) return `${sizeFmt.format(bytes / 1024)} Ko`;
+  return `${sizeFmt.format(bytes / (1024 * 1024))} Mo`;
+}
+
+// Compression : on affiche le gain, ou que l'original a été gardé.
+function doneLabel(result) {
+  if (result.kept) {
+    return `✓ Déjà optimisé — original conservé (${formatSize(result.before)})`;
+  }
+  if (result.before != null) {
+    const pct = Math.round((1 - result.after / result.before) * 100);
+    return `✓ ${result.filename} · ${formatSize(result.before)} → ${formatSize(result.after)} (−${pct} %)`;
+  }
+  return `✓ ${result.filename}`;
+}
+
 // ---------- rendu file row ----------
 function buildRow(it) {
   const thumbCanvas = el("canvas", {
@@ -311,6 +334,14 @@ function buildRow(it) {
     },
     "Télécharger",
   );
+  const convertBtn = el(
+    "button",
+    {
+      class: "btn btn-secondary",
+      onclick: () => convertSingle(it.id),
+    },
+    "Convertir",
+  );
   const removeBtn = el(
     "button",
     {
@@ -322,6 +353,7 @@ function buildRow(it) {
 
   const actions = el("div", { class: "file-row__actions" }, [
     dlBtn,
+    convertBtn,
     removeBtn,
   ]);
 
@@ -330,6 +362,7 @@ function buildRow(it) {
   row._parts = {
     statusRow,
     dlBtn,
+    convertBtn,
     removeBtn,
     select: meta.querySelector("select"),
     thumbImg: thumb.querySelector("img"),
@@ -346,6 +379,7 @@ function updateRow(it) {
   const {
     statusRow,
     dlBtn,
+    convertBtn,
     removeBtn,
     select,
     thumbImg,
@@ -373,6 +407,10 @@ function updateRow(it) {
   }
 
   dlBtn.hidden = it.status !== "done";
+  convertBtn.hidden =
+    !it.targets.length || it.status === "done" || it.status === "running";
+  convertBtn.disabled = state.busy;
+  convertBtn.textContent = it.to === "compress" ? "Compresser" : "Convertir";
   removeBtn.disabled = it.status === "running";
 
   statusRow.replaceChildren();
@@ -396,11 +434,7 @@ function updateRow(it) {
     );
   } else if (it.status === "done") {
     statusRow.append(
-      el(
-        "span",
-        { class: "status status--done" },
-        "✓ " + it.result.filename,
-      ),
+      el("span", { class: "status status--done" }, doneLabel(it.result)),
     );
   } else if (it.status === "error") {
     statusRow.append(
@@ -462,6 +496,10 @@ function syncSide() {
     done > 1 ? "Télécharger tout (.zip)" : "Télécharger";
 
   refs.videoSection.hidden = !hasVideo();
+  refs.compressSection.hidden = !state.files.some((f) => f.to === "compress");
+  for (const it of state.files) {
+    if (it.node) it.node._parts.convertBtn.disabled = state.busy;
+  }
 
   refs.heavyHint.hidden = !heavySelected();
   const eLabel =
@@ -489,6 +527,7 @@ async function convertOne(it) {
       {
         quality: state.quality,
         videoMaxHeight: state.videoMaxHeight,
+        compressLevel: state.compressLevel,
         gifFrame: it.frame,
       },
       (p) => {
@@ -530,6 +569,19 @@ async function convertAll() {
       await convertOne(it);
     }
   }
+  state.busy = false;
+  syncSide();
+}
+
+// Un seul fichier (bouton de la ligne). Même verrou que "Tout
+// convertir" : le moteur ffmpeg ne traite qu'un fichier à la fois.
+async function convertSingle(id) {
+  const it = state.files.find((f) => f.id === id);
+  if (!it || state.busy) return;
+  aborted = false;
+  state.busy = true;
+  syncSide();
+  await convertOne(it);
   state.busy = false;
   syncSide();
 }
@@ -590,6 +642,10 @@ refs.quality.addEventListener("input", (e) => {
 });
 refs.videoMaxHeight.addEventListener("change", (e) => {
   state.videoMaxHeight = e.target.value;
+});
+
+refs.compressLevel.addEventListener("change", (e) => {
+  state.compressLevel = e.target.value;
 });
 
 refs.convertSide.addEventListener("click", convertAll);

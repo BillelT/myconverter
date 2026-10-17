@@ -1,4 +1,10 @@
-import { baseName, loadImageElement, imageDataToBmp } from "./util.js";
+import {
+  baseName,
+  loadImageElement,
+  imageDataToBmp,
+  compressLevel,
+  finishCompress,
+} from "./util.js";
 import { openGif } from "./gif-frames.js";
 
 const RASTER_SOURCES = [
@@ -113,6 +119,32 @@ async function imageToPdf(file, opts) {
   return { blob, filename: `${baseName(file.name)}.pdf` };
 }
 
+// Compression même format. JPG/WEBP : ré-encodage à qualité réduite.
+// PNG : UPNG — sans perte (légère) ou palette réduite (équilibrée,
+// forte), ce que canvas.toBlob ne sait pas faire.
+const COMPRESS_QUALITY = [0.82, 0.7, 0.5];
+const PNG_COLORS = [0, 256, 64];
+
+async function compressImage(file, ext, opts) {
+  const l = compressLevel(opts);
+  if (ext !== "png") {
+    const out = await rasterConvert(file, ext, {
+      ...opts,
+      quality: COMPRESS_QUALITY[l],
+    });
+    return finishCompress(file, ext, out);
+  }
+  const { canvas, ctx, img } = await drawToCanvas(file, opts);
+  ctx.drawImage(img, 0, 0);
+  const { width, height } = canvas;
+  const pixels = ctx.getImageData(0, 0, width, height).data;
+  const UPNG = (await import("upng-js")).default;
+  const png = UPNG.encode([pixels.buffer], width, height, PNG_COLORS[l]);
+  return finishCompress(file, ext, {
+    blob: new Blob([png], { type: "image/png" }),
+  });
+}
+
 export const defs = [];
 
 for (const from of RASTER_SOURCES) {
@@ -146,5 +178,16 @@ for (const from of RASTER_SOURCES) {
     label: "PDF",
     category: "image",
     run: (file, opts) => imageToPdf(file, opts),
+  });
+}
+
+for (const ext of ["jpg", "png", "webp"]) {
+  defs.push({
+    from: ext,
+    to: "compress",
+    ext,
+    label: `Compresser (${ext.toUpperCase()})`,
+    category: "image",
+    run: (file, opts) => compressImage(file, ext, opts),
   });
 }

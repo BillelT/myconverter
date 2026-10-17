@@ -81,6 +81,19 @@
             </div>
           </section>
 
+          <section class="editor__section" data-compress-section hidden>
+            <span class="editor__label">Compression</span>
+            <select data-compress-level aria-label="Niveau de compression">
+              <option value="light">Légère (qualité max)</option>
+              <option value="medium" selected>Équilibrée</option>
+              <option value="strong">Forte (fichier le plus léger)</option>
+            </select>
+            <p class="caption">
+              Garde le format d'origine. Si le fichier ne s'allège pas,
+              l'original est conservé.
+            </p>
+          </section>
+
           <section class="editor__section" data-video-section hidden>
             <span class="editor__label">Résolution vidéo (max)</span>
             <select data-video-max-height>

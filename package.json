@@ -26,6 +26,7 @@
     "papaparse": "^5.4.1",
     "pdfjs-dist": "^4.7.76",
     "turndown": "^7.2.0",
+    "upng-js": "^2.1.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
