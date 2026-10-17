@@ -92,7 +92,7 @@
   padding: var(--b-space-2) var(--b-space-8);
   font-size: var(--b-text-xs);
   font-weight: var(--b-font-medium);
-  border: 1px solid var(--b-gray-300);
+  border: 1px solid var(--b-gray-200);
   border-radius: var(--b-radius-xs);
   color: var(--b-text-control);
   background: none;

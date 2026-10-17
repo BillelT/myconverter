@@ -112,10 +112,15 @@ a {
   align-items: baseline;
   gap: var(--b-space-8);
   flex-wrap: wrap;
-  font-size: 28px;
-  font-weight: var(--b-font-medium);
+  font-size: var(--b-text-sm);
+  font-weight: var(--b-font-semibold);
   line-height: var(--b-leading-tight);
   color: var(--b-ink);
+}
+
+.editor__tag {
+  font-weight: var(--b-font-regular);
+  color: var(--b-gray-600);
 }
 
 .editor__body {
