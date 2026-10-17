@@ -422,7 +422,7 @@ a {
   justify-content: center;
   gap: var(--b-space-16);
   padding: var(--b-space-16);
-  background: oklch(0 0 0 / 0.15);
+  background: oklch(0 0 0 / 0.05);
   pointer-events: none;
   opacity: 0;
   transition: opacity var(--b-duration) var(--b-ease-out);
@@ -457,14 +457,23 @@ a {
   max-width: 100%;
   padding-block: 8px;
   overflow: hidden;
-  --fade: calc(var(--thumb) * 1.5);
-  mask-image: linear-gradient(
-    to right,
-    transparent,
-    #000 var(--fade),
-    #000 calc(100% - var(--fade)),
-    transparent
-  );
+  /* Fondu long et progressif (paliers en ease) plutôt qu'une rampe
+     linéaire courte qui marque une limite. */
+  --fade: calc(var(--thumb) * 2.25);
+  mask-image:
+    linear-gradient(
+      to right,
+      transparent,
+      rgb(0 0 0 / 0.1) calc(var(--fade) * 0.25),
+      rgb(0 0 0 / 0.35) calc(var(--fade) * 0.5),
+      rgb(0 0 0 / 0.7) calc(var(--fade) * 0.75),
+      #000 var(--fade),
+      #000 calc(100% - var(--fade)),
+      rgb(0 0 0 / 0.7) calc(100% - var(--fade) * 0.75),
+      rgb(0 0 0 / 0.35) calc(100% - var(--fade) * 0.5),
+      rgb(0 0 0 / 0.1) calc(100% - var(--fade) * 0.25),
+      transparent
+    );
 }
 
 .scrubber__strip {
@@ -481,16 +490,26 @@ a {
   height: var(--thumb);
   border-radius: var(--b-radius-md);
   opacity: 0.6;
-  box-shadow: 0 2px 8px oklch(0 0 0 / 0.16);
-  transition-property: opacity, scale;
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.08);
+  transition-property: opacity, scale, translate;
   transition-duration: var(--b-duration-slow);
   transition-timing-function: var(--b-ease-out);
 }
 
-/* Frame courante : pleine opacité et légèrement agrandie. */
+/* Frame courante : pleine opacité, légèrement agrandie, et écartée
+   de 4 px de ses voisines (translate plutôt que margin : la frame
+   courante reste pile au centre, sans relayout). */
 .scrubber__thumb.is-current {
   opacity: 1;
   scale: 1.14;
+}
+
+.scrubber__thumb:has(~ .is-current) {
+  translate: -4px 0;
+}
+
+.scrubber__thumb.is-current ~ .scrubber__thumb {
+  translate: 4px 0;
 }
 
 .scrubber__counter {
